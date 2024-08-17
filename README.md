@@ -16,5 +16,15 @@ insert into posts(post_id, root_id, parent_id, content) values (5, 1, 4, "Commen
 insert into posts(post_id, root_id, parent_id, content) values (6, 1, 2, "Comment on Post 5");
 pragma foreign_keys=on;
 
+## TODO
+## ===============================
+## counting comments and showing under post
+## paging
+## validations
+## requires_auth
+## load pictures
+## truncate
+
+
 
 

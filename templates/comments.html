@@ -1,5 +1,8 @@
 {{ post.content }}
-<a href="/post/{{post.post_id}}/comment">Create Comment</a>
+<form action="/post/{{post.post_id}}/comment" method="post">
+<input type="text" name="content">
+<button type="submit">Create Comment</button>
+</form>
 
 <div class="comments" style="margin-left: 50px">
 {% if (post.replies is defined) and post.replies %}
