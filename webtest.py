@@ -2,7 +2,7 @@ from flask import Flask, render_template
 
 app = Flask(__name__)
 
-@app.route('/')
+@app.route('/post/1')
 def index():
     post = {
     "id": 0,
@@ -37,6 +37,7 @@ def index():
         }
     ]
     }
+    print(post)
     return render_template('comments.html', post=post)
 
 if __name__ == '__main__':

@@ -47,16 +47,16 @@ def build_post_hierarchy(tuples):
 
 
 # Example usage:
-# tuples = [
-#     (1, 1, 1, "Root Post 1"),  # root post
-#     (2, 1, 1, "Comment on Post 1 (same level as Root Post 1)"),  # sibling comment to the root post
-#     (3, 1, 2, "Comment on Post 2"),  # child comment of post 2
-#     (4, 4, 4, "Root Post 2"),  # another root post
-#     (5, 4, 4, "Comment on Post 4"),  # sibling comment to root post 2
-#     (6, 4, 5, "Comment on Post 5"),  # child comment of post 5
-# ]
+tuples = [
+    (1, 1, 1, "Root Post 1"),  # root post
+    (2, 1, 1, "Comment on Post 1 (same level as Root Post 1)"),  # sibling comment to the root post
+    (3, 1, 2, "Comment on Post 2"),  # child comment of post 2
+    (4, 4, 4, "Root Post 2"),  # another root post
+    (5, 4, 4, "Comment on Post 4"),  # sibling comment to root post 2
+    (6, 4, 5, "Comment on Post 5"),  # child comment of post 5
+]
 
-tuples = getposts()
+#tuples = getposts()
 result = build_post_hierarchy(tuples)
 
 for root in result:
