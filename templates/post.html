@@ -1,8 +1,10 @@
-{{ post.content }} 
-<div class="comments" style="margin-left: 50px">
-{% if post.comments is defined and post.comments|length > 0 %}
-{% for comment in post.comments %}
-	{% include "post.html" %}
-{% endfor %}
-{% endif %}
-</div>
+{% extends "base.html" %}
+{% block content %}
+
+	{% if post is not none %}
+        {% with post=post %}
+            {% include "comments.html" %}
+        {% endwith %}
+	{% endif %}
+
+{% endblock %}

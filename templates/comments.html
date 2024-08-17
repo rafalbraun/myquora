@@ -1,4 +1,6 @@
 {{ post.content }}
+<a href="/post/{{post.post_id}}/comment">Create Comment</a>
+
 <div class="comments" style="margin-left: 50px">
 {% if (post.replies is defined) and post.replies %}
     {% for comment in post.replies %}
