@@ -20,6 +20,7 @@ pragma foreign_keys=on;
 ## ===============================
 ## counting comments and showing under post
 ## paging
+## handle current data, deleted date
 ## validations
 ## requires_auth
 ## load pictures

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<form action="/post/update/{{post.post_id}}" method="post">
+
+	<label for="content">content:</label><br>
+	<textarea id="content" name="content">{{post.content}}</textarea>
+
+	<br>
+
+	<button type="submit">update</button>
+
+</form>
+
+{% endblock %}

@@ -1,4 +1,7 @@
 {{ post.content }}
+
+<a href="/post/update/{{post.post_id}}">update</a>
+
 <form action="/post/{{post.post_id}}/comment" method="post">
 <input type="text" name="content">
 <button type="submit">Create Comment</button>

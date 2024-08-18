@@ -27,8 +27,8 @@ create table if not exists POSTS (
 QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content from posts where root_id = ?"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content from posts where post_id = ?"
 QUERY_CREATE_POST="insert into posts(content) values(?)"
-QUERY_UPDATE_POST=""
-QUERY_DELETE_POST=""
+QUERY_UPDATE_POST="update posts set content=? where post_id=?"
+QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 QUERY_SELECT_POSTS="select post_id, content from posts where post_id=root_id"
 QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content) values(?,?,?)"
@@ -81,8 +81,21 @@ def post_comment(parent_id):
 		return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
-def post_update():
-	pass
+def post_update(post_id):
+	if request.method == 'GET':
+		with sqlite3.connect(dbname) as conn:
+			cursor = conn.cursor()
+			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
+			post = Post(row[0], row[3]) 
+			return render_template("post_update.html", post=post)
+	if request.method == 'POST':
+		content = request.form.get('content')
+		with sqlite3.connect(dbname) as conn:
+			cursor = conn.cursor()
+			cursor.execute(QUERY_UPDATE_POST, (content,post_id))
+			parent = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
+			_, root_id, _, _ = parent
+			return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/delete/<int:post_id>", methods=["GET"])
 def post_delete():
