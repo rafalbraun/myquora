@@ -2,7 +2,7 @@
 {% block content %}
 
 	{% if post is not none %}
-        {% with post=post %}
+        {% with post=post, auth=request.cookies.get('auth') %}
             {% include "comments.html" %}
         {% endwith %}
 	{% endif %}
