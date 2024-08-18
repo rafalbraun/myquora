@@ -7,11 +7,19 @@ from pprint import pprint
 app = Flask(__name__)
 dbname = "posts.db"
 
+QUERY_CREATE_USER_TABLE = '''
+create table if not exists USERS (
+	user_id 	INTEGER PRIMARY KEY,
+	username 	TEXT,
+	password 	TEXT
+);
+'''
 QUERY_CREATE_POST_TABLE = '''
 create table if not exists POSTS (
 	post_id INTEGER PRIMARY KEY, 
 	root_id INTEGER, 
 	parent_id INTEGER, 
+	user_id INTEGER,
 	content TEXT,
 	created_by INTEGER,
 	created_at INTEGER,
@@ -20,11 +28,13 @@ create table if not exists POSTS (
 	deleted_by INTEGER,
 	deleted_at INTEGER,	
 	FOREIGN KEY(root_id) REFERENCES POSTS(post_id),
-	FOREIGN KEY(parent_id) REFERENCES POSTS(post_id)
+	FOREIGN KEY(parent_id) REFERENCES POSTS(post_id),
+	FOREIGN KEY(user_id) REFERENCES POSTS(user_id)
 );
 '''
 
 QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content from posts where root_id = ?"
+QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content from posts where post_id = ?"
 QUERY_CREATE_POST="insert into posts(content) values(?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
@@ -100,6 +110,33 @@ def post_update(post_id):
 @app.route("/post/delete/<int:post_id>", methods=["GET"])
 def post_delete():
 	pass
+
+@app.route("/signup", methods=["GET","POST"])
+def signup():
+	if request.method == 'GET':
+		return render_template("signup.html")
+	if request.method == 'POST':
+		username = request.form.get('username')
+		password = request.form.get('password')
+		with sqlite3.connect(dbname) as conn:
+			cursor = conn.cursor()
+			cursor.execute(QUERY_CREATE_USER, (username, password))		## TODO check if not exists
+			return redirect(url_for('index'))
+
+@app.route("/signin", methods=["GET","POST"])
+def signin():
+	if request.method == 'GET':
+		return render_template("signin.html")
+	if request.method == 'POST':
+		username = request.form.get('username')
+		password = request.form.get('password')
+		## TODO create session
+		return redirect(url_for('index'))
+
+class User:
+	def __init__(self, username, password):
+		self.username
+		self.password
 
 class Post:
 	def __init__(self, post_id, content):
