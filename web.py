@@ -34,11 +34,11 @@ create table if not exists POSTS (
 	deleted_at 	INTEGER,	
 	FOREIGN KEY(root_id) 	REFERENCES POSTS(post_id),
 	FOREIGN KEY(parent_id) 	REFERENCES POSTS(post_id),
-	FOREIGN KEY(user_id) 	REFERENCES POSTS(user_id)
+	FOREIGN KEY(username) 	REFERENCES POSTS(username)
 );
 '''
 
-QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content from posts where root_id = ?"
+QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ?"
 QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
 QUERY_SELECT_USER="select username, password from users where username = ?"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content from posts where post_id = ?"
@@ -46,13 +46,13 @@ QUERY_CREATE_POST="insert into posts(content) values(?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
-QUERY_SELECT_POSTS="select t2.root_id as root_id, t1.content as content, t2.comment_count as comment_count from (select root_id, content from posts group by root_id) t1 left join (select root_id, count(post_id) as comment_count from posts group by root_id) t2 on t1.root_id = t2.root_id"
+##QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
+QUERY_SELECT_POSTS="select post_id, content, 0, username from posts where post_id=root_id"
 QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content) values(?,?,?)"
 
 def login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
-		# Check if the user is logged in by verifying the cookie
 		auth_cookie = request.cookies.get('auth')
 		if not auth_cookie or auth_cookie != USERNAME:
 			return redirect(url_for('signin'))
@@ -70,7 +70,7 @@ def posts():
 		rows = cursor.execute(QUERY_SELECT_POSTS).fetchall()
 		posts = []
 		for row in rows:
-			posts.append(Post(row[0],row[1],row[2]))
+			posts.append(Post(row[0],row[1],row[2],row[3]))
 		return render_template("index.html", posts=posts)
 
 @app.route("/post/<int:root_id>", methods=["GET"])
@@ -178,16 +178,16 @@ def signin():
 @app.route('/signout')
 @login_required
 def signout():
-	# Create a response and clear the auth cookie
 	resp = make_response(redirect(url_for('signin')))
 	resp.set_cookie('auth', '', expires=0)
 	return resp
 
 class Post:
-	def __init__(self, post_id, content, comment_count=0):
+	def __init__(self, post_id, content, username, comment_count=0):
 		self.post_id = post_id
 		self.content = content
 		self.replies = []
+		self.username = username
 		self.comment_count = comment_count
 
 	def add_reply(self, comment):
@@ -206,12 +206,12 @@ class Post:
 def build_post_hierarchy(tuples):
 	posts = {}
 
-	for post_id, root_id, parent_id, content in tuples:
-		posts[post_id] = Post(post_id, content)
+	for post_id, root_id, parent_id, content, username in tuples:
+		posts[post_id] = Post(post_id, content, username)
 
 	root_posts = []
 
-	for post_id, root_id, parent_id, content in tuples:
+	for post_id, root_id, parent_id, content, username in tuples:
 		if post_id == root_id == parent_id:
 			root_posts.append(posts[post_id])
 		else:
