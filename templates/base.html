@@ -12,8 +12,14 @@
     <div class="container">
     	<a href="/post/create">Create Post</a>
     	<a href="/posts">Posts</a>
-    	<a href="/signup">Sign Up</a>
-    	<a href="/signin">Sign In</a>
+
+	    {% if request.cookies.get('auth') %}
+	        <a href="{{ url_for('signout') }}">Sign Out</a>
+	    {% else %}
+	        <a href="{{ url_for('signup') }}">Sign Up</a>
+	        <a href="{{ url_for('signin') }}">Sign In</a>
+	    {% endif %}
+
     </div>
 </header>
 <main>

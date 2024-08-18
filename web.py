@@ -1,11 +1,17 @@
 #!/usr/bin/python3
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, Response, make_response, jsonify
 import sqlite3
 import json
 from pprint import pprint
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key'  # Needed for securely signing the session cookie
 dbname = "posts.db"
+
+# Hardcoded credentials for simplicity
+USERNAME = 'admin'
+PASSWORD = 'password'
 
 QUERY_CREATE_USER_TABLE = '''
 create table if not exists USERS (
@@ -43,6 +49,20 @@ QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 QUERY_SELECT_POSTS="select post_id, content from posts where post_id=root_id"
 QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content) values(?,?,?)"
 
+def login_required(f):
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		# Check if the user is logged in by verifying the cookie
+		auth_cookie = request.cookies.get('auth')
+		if not auth_cookie or auth_cookie != USERNAME:
+			return redirect(url_for('signin'))
+		return f(*args, **kwargs)
+	return decorated_function
+
+@app.route("/index", methods=["GET"])
+def index():
+	return render_template("index.html")
+
 @app.route("/posts", methods=["GET"])
 def posts():
 	with sqlite3.connect(dbname) as conn:
@@ -66,6 +86,7 @@ def post(root_id):
 		return render_template("post.html", post=result[0])
 
 @app.route("/post/create", methods=["GET","POST"])
+@login_required
 def post_create():
 	if request.method == 'GET':
 		return render_template("post_create.html")
@@ -80,8 +101,17 @@ def post_create():
 			return redirect(url_for(f'post', root_id=lastrowid))
 
 @app.route("/post/<int:parent_id>/comment", methods=["POST"])
+@login_required
 def post_comment(parent_id):
 	content = request.form.get('content')
+
+	if len(content) == 0:
+		error = "empty content"
+		return render_template("error.html", error=error)
+	if len(content) > 2000:
+		error = "content too large"
+		return render_template("error.html", error=error)
+
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		## get parent to obtain root_id and parent_id
@@ -91,6 +121,7 @@ def post_comment(parent_id):
 		return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
+@login_required
 def post_update(post_id):
 	if request.method == 'GET':
 		with sqlite3.connect(dbname) as conn:
@@ -121,7 +152,7 @@ def signup():
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			cursor.execute(QUERY_CREATE_USER, (username, password))		## TODO check if not exists
-			return redirect(url_for('index'))
+			return redirect(url_for('posts'))
 
 @app.route("/signin", methods=["GET","POST"])
 def signin():
@@ -130,13 +161,21 @@ def signin():
 	if request.method == 'POST':
 		username = request.form.get('username')
 		password = request.form.get('password')
-		## TODO create session
-		return redirect(url_for('index'))
+		if username == USERNAME and password == PASSWORD:
+			# Create a response and set a cookie if login is successful
+			resp = make_response(redirect(url_for('posts')))
+			resp.set_cookie('auth', username, max_age=3600, httponly=True)  # Cookie valid for 1 hour
+			return resp
+		else:
+			return 'Invalid credentials', 401
 
-class User:
-	def __init__(self, username, password):
-		self.username
-		self.password
+@app.route('/signout')
+@login_required
+def signout():
+	# Create a response and clear the auth cookie
+	resp = make_response(redirect(url_for('signin')))
+	resp.set_cookie('auth', '', expires=0)
+	return resp
 
 class Post:
 	def __init__(self, post_id, content):
@@ -174,4 +213,4 @@ def build_post_hierarchy(tuples):
 	return root_posts
 
 if __name__=="__main__":
-	app.run(host='0.0.0.0', port=8080)
+	app.run(debug=True, host='0.0.0.0', port=8080)
