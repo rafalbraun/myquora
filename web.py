@@ -15,32 +15,32 @@ PASSWORD = 'password'
 
 QUERY_CREATE_USER_TABLE = '''
 create table if not exists USERS (
-	user_id 	INTEGER PRIMARY KEY,
-	username 	TEXT,
+	username 	TEXT PRIMARY KEY,
 	password 	TEXT
 );
 '''
 QUERY_CREATE_POST_TABLE = '''
 create table if not exists POSTS (
-	post_id INTEGER PRIMARY KEY, 
-	root_id INTEGER, 
-	parent_id INTEGER, 
-	user_id INTEGER,
-	content TEXT,
-	created_by INTEGER,
-	created_at INTEGER,
-	updated_by INTEGER,
-	updated_at INTEGER,
-	deleted_by INTEGER,
-	deleted_at INTEGER,	
-	FOREIGN KEY(root_id) REFERENCES POSTS(post_id),
-	FOREIGN KEY(parent_id) REFERENCES POSTS(post_id),
-	FOREIGN KEY(user_id) REFERENCES POSTS(user_id)
+	post_id 	INTEGER PRIMARY KEY, 
+	root_id 	INTEGER, 
+	parent_id 	INTEGER, 
+	username 	TEXT,
+	content 	TEXT,
+	created_by 	INTEGER,
+	created_at 	INTEGER,
+	updated_by 	INTEGER,
+	updated_at 	INTEGER,
+	deleted_by 	INTEGER,
+	deleted_at 	INTEGER,	
+	FOREIGN KEY(root_id) 	REFERENCES POSTS(post_id),
+	FOREIGN KEY(parent_id) 	REFERENCES POSTS(post_id),
+	FOREIGN KEY(user_id) 	REFERENCES POSTS(user_id)
 );
 '''
 
 QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content from posts where root_id = ?"
 QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
+QUERY_SELECT_USER="select username, password from users where username = ?"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content from posts where post_id = ?"
 QUERY_CREATE_POST="insert into posts(content) values(?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
@@ -161,13 +161,19 @@ def signin():
 	if request.method == 'POST':
 		username = request.form.get('username')
 		password = request.form.get('password')
-		if username == USERNAME and password == PASSWORD:
-			# Create a response and set a cookie if login is successful
-			resp = make_response(redirect(url_for('posts')))
-			resp.set_cookie('auth', username, max_age=3600, httponly=True)  # Cookie valid for 1 hour
-			return resp
-		else:
-			return 'Invalid credentials', 401
+		with sqlite3.connect(dbname) as conn:
+			cursor = conn.cursor()
+			row = cursor.execute(QUERY_SELECT_USER, (username,)).fetchone()
+			if row is None:
+				return 'no such user', 401
+			else:
+				if username == row[0] and password == row[1]:
+					# Create a response and set a cookie if login is successful
+					resp = make_response(redirect(url_for('posts')))
+					resp.set_cookie('auth', username, max_age=3600, httponly=True)  # Cookie valid for 1 hour
+					return resp
+				else:
+					return 'Invalid credentials', 401
 
 @app.route('/signout')
 @login_required

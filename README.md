@@ -7,6 +7,7 @@ insert into posts(root_id, parent_id, post_id, content) values(1, 1, 6, "This is
 
 
 pragma foreign_keys=off;
+
 delete from posts;
 insert into posts(post_id, root_id, parent_id, content) values (1, 1, 1, "Root Post 1");
 insert into posts(post_id, root_id, parent_id, content) values (2, 1, 1, "Comment on Post 1 (same level as Root Post 1)");
@@ -14,6 +15,9 @@ insert into posts(post_id, root_id, parent_id, content) values (3, 1, 2, "Commen
 insert into posts(post_id, root_id, parent_id, content) values (4, 1, 3, "Root Post 2");
 insert into posts(post_id, root_id, parent_id, content) values (5, 1, 4, "Comment on Post 4");
 insert into posts(post_id, root_id, parent_id, content) values (6, 1, 2, "Comment on Post 5");
+
+insert into users(username, password) values("admin","password");
+
 pragma foreign_keys=on;
 
 ## TODO
