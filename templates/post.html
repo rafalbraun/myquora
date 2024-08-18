@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
 
+    [ {{ comment_count }} ]<br>
+    
 	{% if post is not none %}
         {% with post=post, auth=request.cookies.get('auth') %}
             {% include "comments.html" %}

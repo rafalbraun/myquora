@@ -2,6 +2,7 @@
 {% block content %}
 
 	{% for post in posts %}
+	    [ {{ post.comment_count }} ]<br>
 		{{ post.content }} <a href="/post/{{post.post_id}}">goto</a><hr>
 	{% endfor %}
 

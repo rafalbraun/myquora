@@ -46,7 +46,7 @@ QUERY_CREATE_POST="insert into posts(content) values(?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
-QUERY_SELECT_POSTS="select post_id, content from posts where post_id=root_id"
+QUERY_SELECT_POSTS="select t2.root_id as root_id, t1.content as content, t2.comment_count as comment_count from (select root_id, content from posts group by root_id) t1 left join (select root_id, count(post_id) as comment_count from posts group by root_id) t2 on t1.root_id = t2.root_id"
 QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content) values(?,?,?)"
 
 def login_required(f):
@@ -70,7 +70,7 @@ def posts():
 		rows = cursor.execute(QUERY_SELECT_POSTS).fetchall()
 		posts = []
 		for row in rows:
-			posts.append(Post(row[0],row[1]))
+			posts.append(Post(row[0],row[1],row[2]))
 		return render_template("index.html", posts=posts)
 
 @app.route("/post/<int:root_id>", methods=["GET"])
@@ -83,7 +83,7 @@ def post(root_id):
 		result = build_post_hierarchy(rows)
 		if len(result) != 1:
 			return render_template("consistency_error.html", post_id=root_id)			
-		return render_template("post.html", post=result[0])
+		return render_template("post.html", post=result[0], comment_count=len(rows))
 
 @app.route("/post/create", methods=["GET","POST"])
 @login_required
@@ -184,10 +184,11 @@ def signout():
 	return resp
 
 class Post:
-	def __init__(self, post_id, content):
+	def __init__(self, post_id, content, comment_count=0):
 		self.post_id = post_id
 		self.content = content
 		self.replies = []
+		self.comment_count = comment_count
 
 	def add_reply(self, comment):
 		self.replies.append(comment)

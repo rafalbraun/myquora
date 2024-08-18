@@ -29,7 +29,19 @@ pragma foreign_keys=on;
 ## requires_auth
 ## load pictures
 ## truncate
+## change/reset password (with email confirmation?)
 
+
+select post_id, content from posts where post_id=root_id
+
+select t2.root_id, t2.comment_count, t1.content
+from (select root_id, content from posts group by root_id) t1
+left join (select root_id, count(post_id) as comment_count from posts group by root_id) t2
+on t1.root_id = t2.root_id
+;
+
+
+QUERY_SELECT_POSTS="select t2.root_id as root_id, t2.comment_count as comment_count, t1.content as content from (select root_id, content from posts group by root_id) t1 left join (select root_id, count(post_id) as comment_count from posts group by root_id) t2 on t1.root_id = t2.root_id"
 
 
 
