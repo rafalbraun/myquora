@@ -5,9 +5,11 @@
 <hr>
 
 	{% for post in posts %}
-	    [ {{ post.comment_count }} ]<br>
-		{{ post.content }}
-	    <div class="author" style="color: grey;">by {{ post.username }}</div>
+		<div class="post" id="{{post.post_id}}">
+			{{ post.content }}
+		    <div class="author" style="color: grey;">by {{ post.username }}</div>
+			<a href="#{{post.post_id}}">share</a>
+		</div>
 		<hr>
 	{% endfor %}
 

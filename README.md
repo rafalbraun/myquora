@@ -25,32 +25,12 @@ pragma foreign_keys=on;
 ## [x] requires_auth
 ## [x] creating comment/post as logged user
 ## [ ] paging
-## [ ] handle current date, deleted date
 ## [ ] validations
 ## [ ] load pictures
 ## [ ] truncate
 ## [ ] change/reset password (with email confirmation?)
+## [ ] versions - keep ordering by time, paging
+## [ ] implement created_at, created_by etc ...
+## [ ] handle current date, deleted date
 
-
-select post_id, content from posts where post_id=root_id
-
-select t1.root_id, t1.comment_count, t2.content, t2.username
-from (select root_id, count(post_id) as comment_count from posts group by root_id) t1
-left join (select root_id, content, username from posts) t2
-on t1.root_id = t2.root_id
-;
-
-
-select t2.post_id, t2.content, t2.username, t1.comment_count from
-(select root_id, count(post_id) as comment_count from posts group by root_id) t1
-left join
-(select post_id, content, username from posts) t2
-on t1.root_id = t2.post_id
-;
-
-
-
-
-
-select t2.post_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select post_id, content, username from posts) t2 on t1.root_id = t2.post_id
 

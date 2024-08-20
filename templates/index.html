@@ -2,9 +2,13 @@
 {% block content %}
 
 	{% for post in posts %}
-	    [ {{ post.comment_count }} ]<br>
-		{{ post.content }} <a href="/post/{{post.post_id}}">goto</a>
-	    <div class="author" style="color: grey;">by {{ post.username }}</div>
+		<div class="post" id="{{post.post_id}}">
+		    [ {{ post.comment_count }} comments ]<br>
+			{{ post.content }} <a href="/post/{{post.post_id}}">goto</a>
+		    <div class="author" style="color: grey;">by {{ post.username }}</div>
+		    <a href="/post/versions/{{post.post_id}}">versions</a>
+			<a href="#{{post.post_id}}">share</a>
+		</div>
 		<hr>
 	{% endfor %}
 
