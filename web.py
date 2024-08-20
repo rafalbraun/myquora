@@ -39,18 +39,23 @@ create table if not exists POSTS (
 );
 '''
 
-QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
-QUERY_SELECT_POST_VERSIONS="select post_id, content, username from posts where post_id = ? or source_id = ?"
+## select user queries
 QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
 QUERY_SELECT_USER="select username, password from users where username = ?"
-QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
+
+## update/insert post queries
+QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username) values(?,?,?,?)"
+QUERY_ARCHIVE_POST="insert into posts(content, username, source_id) values(?,?,?)"
 QUERY_CREATE_POST="insert into posts(content, username) values(?,?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
+
+## select post queries
+QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
+QUERY_SELECT_POST_VERSIONS="select post_id, content, username from posts where post_id = ? or source_id = ?"
+QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
 QUERY_SELECT_POSTS="select t2.post_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id) t1 left join (select post_id, content, username from posts) t2 on t1.root_id = t2.post_id"
-QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username) values(?,?,?,?)"
-QUERY_ARCHIVE_POST="insert into posts(content, username, source_id) values(?,?,?)"
 
 def login_required(f):
 	@wraps(f)
