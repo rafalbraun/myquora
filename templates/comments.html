@@ -1,7 +1,9 @@
 <div class="post" id="{{post.post_id}}">
     {{ post.content }}
     <br>
-    <div class="author" style="color: grey;">by {{ post.username }}</div>
+    <div class="author" style="color: grey;">by 
+        <a href="/user/{{ post.username }}">{{ post.username }}</a>
+    </div>
 
     {% if auth %}
     <a href="/post/update/{{post.post_id}}">update</a>

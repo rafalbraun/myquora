@@ -28,9 +28,10 @@ pragma foreign_keys=on;
 ## [ ] validations
 ## [ ] load pictures
 ## [ ] truncate
+## [ ] implement secure cookies
 ## [ ] change/reset password (with email confirmation?)
 ## [ ] versions - keep ordering by time, paging
 ## [ ] implement created_at, created_by etc ...
 ## [ ] handle current date, deleted date
-
+## [ ] change in schema - attr username into created_by
 
