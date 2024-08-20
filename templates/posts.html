@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
 
-	-- user: {{username}} --
-	<hr>
-
 	{% for post in posts %}
 		<div class="post" id="{{post.post_id}}">
 			{{ post.content }}
@@ -16,5 +13,11 @@
 		</div>
 		<hr>
 	{% endfor %}
+	
+	page: {{ pagenum }} / {{ page_count }}<br>
+
+    {% for page in page_range %}
+        <a href="/posts?page={{page}}">{{page}}</a>
+    {% endfor %}
 
 {% endblock %}

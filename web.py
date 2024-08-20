@@ -4,10 +4,12 @@ import sqlite3
 import json
 from pprint import pprint
 from functools import wraps
+import math
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for securely signing the session cookie
 dbname = "posts.db"
+page_size = 30
 
 # Hardcoded credentials for simplicity
 USERNAME = 'admin'
@@ -52,11 +54,12 @@ QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 
 ## select post queries
+QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null and username=? group by root_id) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
 QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
 QUERY_SELECT_POST_VERSIONS="select post_id, root_id, parent_id, content, username from posts where post_id = ? or source_id = ?"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
-QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
-QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null and username=? group by root_id) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 
 def login_required(f):
 	@wraps(f)
@@ -73,13 +76,21 @@ def index():
 
 @app.route("/posts", methods=["GET"])
 def posts():
+	pagenum = request.args.get('page', default=1, type=int)
+	offset = (pagenum-1) * page_size
+
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
-		rows = cursor.execute(QUERY_SELECT_POSTS).fetchall()
+		count = cursor.execute(QUERY_COUNT_POSTS).fetchone()[0]
+		rows = cursor.execute(QUERY_SELECT_POSTS, (page_size,offset)).fetchall()
 		posts = []
 		for row in rows:
 			posts.append(Post(*row))
-		return render_template("index.html", posts=posts)
+
+		page_count = math.ceil(count/page_size)
+		page_range = range(1, page_count+1)
+
+		return render_template("posts.html", posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post/<int:root_id>", methods=["GET"])
 def post(root_id):

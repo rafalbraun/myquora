@@ -1,17 +1,1 @@
-{% extends "base.html" %}
-{% block content %}
-
-	{% for post in posts %}
-		<div class="post" id="{{post.post_id}}">
-		    [ {{ post.comment_count }} comments ]<br>
-			{{ post.content }} <a href="/post/{{post.post_id}}">goto</a>
-		    <div class="author" style="color: grey;">by 
-		    	<a href="/user/{{ post.username }}">{{ post.username }}</a>
-		    </div>
-		    <a href="/post/versions/{{post.post_id}}">versions</a>
-			<a href="#{{post.post_id}}">share</a>
-		</div>
-		<hr>
-	{% endfor %}
-
-{% endblock %}
+this is index page

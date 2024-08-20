@@ -35,3 +35,9 @@ pragma foreign_keys=on;
 ## [ ] handle current date, deleted date
 ## [ ] change in schema - attr username into created_by
 
+
+select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 
+	from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id limit 10 offset 0) t1 
+	left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id;
+
+
