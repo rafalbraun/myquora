@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
 
+<h4>VERSIONS</h4>
+<hr>
+
 	{% for post in posts %}
 	    [ {{ post.comment_count }} ]<br>
 		{{ post.content }} <a href="/post/{{post.post_id}}">goto</a>

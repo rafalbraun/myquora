@@ -23,7 +23,7 @@ pragma foreign_keys=on;
 ## ===============================
 ## [x] counting comments and showing under post
 ## [x] requires_auth
-## [ ] creating comment/post as logged user
+## [x] creating comment/post as logged user
 ## [ ] paging
 ## [ ] handle current date, deleted date
 ## [ ] validations
@@ -41,8 +41,16 @@ on t1.root_id = t2.root_id
 ;
 
 
-QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
+select t2.post_id, t2.content, t2.username, t1.comment_count from
+(select root_id, count(post_id) as comment_count from posts group by root_id) t1
+left join
+(select post_id, content, username from posts) t2
+on t1.root_id = t2.post_id
+;
 
 
-QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
+
+
+
+select t2.post_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select post_id, content, username from posts) t2 on t1.root_id = t2.post_id
 

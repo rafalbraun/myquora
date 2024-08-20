@@ -22,8 +22,9 @@ create table if not exists USERS (
 QUERY_CREATE_POST_TABLE = '''
 create table if not exists POSTS (
 	post_id 	INTEGER PRIMARY KEY, 
-	root_id 	INTEGER, 
-	parent_id 	INTEGER, 
+	root_id 	INTEGER,
+	parent_id 	INTEGER,
+	source_id 	INTEGER,
 	username 	TEXT,
 	content 	TEXT,
 	created_by 	INTEGER,
@@ -31,24 +32,25 @@ create table if not exists POSTS (
 	updated_by 	INTEGER,
 	updated_at 	INTEGER,
 	deleted_by 	INTEGER,
-	deleted_at 	INTEGER,	
+	deleted_at 	INTEGER,
 	FOREIGN KEY(root_id) 	REFERENCES POSTS(post_id),
 	FOREIGN KEY(parent_id) 	REFERENCES POSTS(post_id),
 	FOREIGN KEY(username) 	REFERENCES POSTS(username)
 );
 '''
 
-QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ?"
-QUERY_CREATE_USER="insert into users(username,password) values(?,?)"
+QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
+QUERY_SELECT_POST_VERSIONS="select post_id, content, username from posts where post_id = ? or source_id = ?"
+QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
 QUERY_SELECT_USER="select username, password from users where username = ?"
-QUERY_SELECT_POST="select post_id, root_id,parent_id, content, username from posts where post_id = ?"
-QUERY_CREATE_POST="insert into posts(content,username) values(?,?)"
+QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
+QUERY_CREATE_POST="insert into posts(content, username) values(?,?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
-##QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
-QUERY_SELECT_POSTS="select post_id, content, 0, username from posts where post_id=root_id"
-QUERY_COMMENT_POST="insert into posts(root_id,parent_id,content,username) values(?,?,?,?)"
+QUERY_SELECT_POSTS="select t2.post_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id) t1 left join (select post_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username) values(?,?,?,?)"
+QUERY_ARCHIVE_POST="insert into posts(content, username, source_id) values(?,?,?)"
 
 def login_required(f):
 	@wraps(f)
@@ -70,7 +72,7 @@ def posts():
 		rows = cursor.execute(QUERY_SELECT_POSTS).fetchall()
 		posts = []
 		for row in rows:
-			posts.append(Post(row[0],row[1],row[2],row[3]))
+			posts.append(Post(*row))
 		return render_template("index.html", posts=posts)
 
 @app.route("/post/<int:root_id>", methods=["GET"])
@@ -83,7 +85,17 @@ def post(root_id):
 		result = build_post_hierarchy(rows)
 		if len(result) != 1:
 			return render_template("consistency_error.html", post_id=root_id)			
-		return render_template("post.html", post=result[0], comment_count=len(rows))
+		return render_template("post.html", post=result[0], comment_count=len(rows)-1)
+
+@app.route("/post/versions/<int:post_id>", methods=["GET"])
+def post_versions(post_id):
+	with sqlite3.connect(dbname) as conn:
+		cursor = conn.cursor()
+		rows = cursor.execute(QUERY_SELECT_POST_VERSIONS, (post_id,post_id)).fetchall()		
+		versions = []
+		for row in rows:
+			versions.append(Post(*row))
+		return render_template("versions.html", posts=versions)
 
 @app.route("/post/create", methods=["GET","POST"])
 @login_required
@@ -119,7 +131,7 @@ def post_comment(parent_id):
 		## get parent to obtain root_id and parent_id
 		parent = cursor.execute(QUERY_SELECT_POST, (parent_id,)).fetchone()
 		post_id, root_id, _, _, _ = parent
-		comment = cursor.execute(QUERY_COMMENT_POST, (root_id,parent_id,content,username))
+		comment = cursor.execute(QUERY_COMMENT_POST, (root_id, parent_id, content, username))
 		return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
@@ -132,12 +144,13 @@ def post_update(post_id):
 			post = Post(row[0], row[3], row[4]) 
 			return render_template("post_update.html", post=post)
 	if request.method == 'POST':
-		content = request.form.get('content')
+		new_content = request.form.get('content')
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
-			cursor.execute(QUERY_UPDATE_POST, (content,post_id))
-			parent = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
-			_, root_id, _, _, _ = parent
+			post = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
+			post_id, root_id, parent_id, content, username = post
+			cursor.execute(QUERY_ARCHIVE_POST, (content,username,post_id))
+			cursor.execute(QUERY_UPDATE_POST, (new_content,post_id))
 			return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/delete/<int:post_id>", methods=["GET"])

@@ -4,6 +4,7 @@
 
 {% if auth %}
 <a href="/post/update/{{post.post_id}}">update</a>
+<a href="/post/versions/{{post.post_id}}">versions</a>
 
 <form action="/post/{{post.post_id}}/comment" method="post">
 <input type="text" name="content">
