@@ -39,16 +39,16 @@ create table if not exists POSTS (
 '''
 
 QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ?"
-QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
+QUERY_CREATE_USER="insert into users(username,password) values(?,?)"
 QUERY_SELECT_USER="select username, password from users where username = ?"
-QUERY_SELECT_POST="select post_id, root_id, parent_id, content from posts where post_id = ?"
-QUERY_CREATE_POST="insert into posts(content) values(?)"
+QUERY_SELECT_POST="select post_id, root_id,parent_id, content, username from posts where post_id = ?"
+QUERY_CREATE_POST="insert into posts(content,username) values(?,?)"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 ##QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
 QUERY_SELECT_POSTS="select post_id, content, 0, username from posts where post_id=root_id"
-QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content) values(?,?,?)"
+QUERY_COMMENT_POST="insert into posts(root_id,parent_id,content,username) values(?,?,?,?)"
 
 def login_required(f):
 	@wraps(f)
@@ -92,10 +92,11 @@ def post_create():
 		return render_template("post_create.html")
 	if request.method == 'POST':
 		content = request.form.get('content')
+		username = request.cookies.get('auth')
 		## TODO validate content
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
-			cursor.execute(QUERY_CREATE_POST, (content,))
+			cursor.execute(QUERY_CREATE_POST, (content,username))
 			lastrowid = cursor.lastrowid
 			cursor.execute(QUERY_AFTER_CREATE, (lastrowid,lastrowid,lastrowid))
 			return redirect(url_for(f'post', root_id=lastrowid))
@@ -104,6 +105,7 @@ def post_create():
 @login_required
 def post_comment(parent_id):
 	content = request.form.get('content')
+	username = request.cookies.get('auth')
 
 	if len(content) == 0:
 		error = "empty content"
@@ -116,8 +118,8 @@ def post_comment(parent_id):
 		cursor = conn.cursor()
 		## get parent to obtain root_id and parent_id
 		parent = cursor.execute(QUERY_SELECT_POST, (parent_id,)).fetchone()
-		post_id, root_id, _, _ = parent
-		comment = cursor.execute(QUERY_COMMENT_POST, (root_id, parent_id, content))
+		post_id, root_id, _, _, _ = parent
+		comment = cursor.execute(QUERY_COMMENT_POST, (root_id,parent_id,content,username))
 		return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
@@ -127,7 +129,7 @@ def post_update(post_id):
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
-			post = Post(row[0], row[3]) 
+			post = Post(row[0], row[3], row[4]) 
 			return render_template("post_update.html", post=post)
 	if request.method == 'POST':
 		content = request.form.get('content')
@@ -135,7 +137,7 @@ def post_update(post_id):
 			cursor = conn.cursor()
 			cursor.execute(QUERY_UPDATE_POST, (content,post_id))
 			parent = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
-			_, root_id, _, _ = parent
+			_, root_id, _, _, _ = parent
 			return redirect(url_for(f'post', root_id=root_id))
 
 @app.route("/post/delete/<int:post_id>", methods=["GET"])

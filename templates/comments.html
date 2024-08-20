@@ -1,4 +1,6 @@
 {{ post.content }}
+<br>
+<div class="author" style="color: grey;">by {{ post.username }}</div>
 
 {% if auth %}
 <a href="/post/update/{{post.post_id}}">update</a>

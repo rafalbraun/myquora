@@ -44,4 +44,5 @@ on t1.root_id = t2.root_id
 QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
 
 
+QUERY_SELECT_POSTS="select t1.root_id, t1.comment_count, t2.content, t2.username from (select root_id, count(post_id) as comment_count from posts group by root_id) t1 left join (select root_id, content, username from posts) t2 on t1.root_id = t2.root_id"
 
