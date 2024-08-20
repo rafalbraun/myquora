@@ -6,7 +6,7 @@
 
 	{% for post in posts %}
 	    [ {{ post.comment_count }} ]<br>
-		{{ post.content }} <a href="/post/{{post.post_id}}">goto</a>
+		{{ post.content }}
 	    <div class="author" style="color: grey;">by {{ post.username }}</div>
 		<hr>
 	{% endfor %}

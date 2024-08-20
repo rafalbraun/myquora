@@ -53,9 +53,9 @@ QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 
 ## select post queries
 QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
-QUERY_SELECT_POST_VERSIONS="select post_id, content, username from posts where post_id = ? or source_id = ?"
+QUERY_SELECT_POST_VERSIONS="select post_id, root_id, parent_id, content, username from posts where post_id = ? or source_id = ?"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
-QUERY_SELECT_POSTS="select t2.post_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id) t1 left join (select post_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
 
 def login_required(f):
 	@wraps(f)
@@ -146,7 +146,7 @@ def post_update(post_id):
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
-			post = Post(row[0], row[3], row[4]) 
+			post = Post(*row) 
 			return render_template("post_update.html", post=post)
 	if request.method == 'POST':
 		new_content = request.form.get('content')
@@ -203,8 +203,10 @@ def signout():
 	return resp
 
 class Post:
-	def __init__(self, post_id, content, username, comment_count=0):
+	def __init__(self, post_id, root_id, parent_id, content, username, comment_count=0):
 		self.post_id = post_id
+		self.root_id = root_id
+		self.parent_id = parent_id
 		self.content = content
 		self.replies = []
 		self.username = username
@@ -227,7 +229,7 @@ def build_post_hierarchy(tuples):
 	posts = {}
 
 	for post_id, root_id, parent_id, content, username in tuples:
-		posts[post_id] = Post(post_id, content, username)
+		posts[post_id] = Post(post_id, root_id, parent_id, content, username)
 
 	root_posts = []
 
