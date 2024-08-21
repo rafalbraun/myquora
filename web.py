@@ -72,6 +72,14 @@ def login_required(f):
 		return f(*args, **kwargs)
 	return decorated_function
 
+def pagination(count, rows):
+	posts = []
+	for row in rows:
+		posts.append(Post(*row))
+	page_count = math.ceil(count/page_size)
+	page_range = range(1, page_count+1)
+	return posts, page_count, page_range
+
 @app.route("/index", methods=["GET"])
 def index():
 	return render_template("index.html")
@@ -85,39 +93,18 @@ def posts():
 		cursor = conn.cursor()
 		count = cursor.execute(QUERY_COUNT_POSTS).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_POSTS, (page_size,offset)).fetchall()
-		
-		posts = []
-		for row in rows:
-			posts.append(Post(*row))
-
-		page_count = math.ceil(count/page_size)
-		page_range = range(1, page_count+1)
-
+		posts, page_count, page_range = pagination(count, rows)
 		return render_template("posts.html", posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post_paged/<int:root_id>", methods=["GET"])
 def post_paged_view(root_id):
 	pagenum = request.args.get('page', default=1, type=int)
 	offset = (pagenum-1) * page_size
-
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
-
 		count = cursor.execute(QUERY_COUNT_POST_COMMENTS, (root_id,)).fetchone()[0]
-		if count == 0:
-			return render_template("not_found.html", post_id=root_id)
-
 		rows = cursor.execute(QUERY_SELECT_POST_WITH_OFFSET, (root_id,page_size,offset)).fetchall()
-		if len(rows) == 0:
-			return render_template("not_found.html", post_id=root_id)
-
-		posts = []
-		for row in rows:
-			posts.append(Post(*row))
-
-		page_count = math.ceil(count/page_size)
-		page_range = range(1, page_count+1)
-
+		posts, page_count, page_range = pagination(count, rows)
 		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)	
 
 @app.route("/post/<int:root_id>", methods=["GET"])
