@@ -34,6 +34,7 @@ pragma foreign_keys=on;
 ## [ ] implement created_at, created_by etc ...
 ## [ ] handle current date, deleted date
 ## [ ] change in schema - attr username into created_by
+## [ ] when doing paged view for posts - do also join on parent to show parent on page
 
 
 select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 

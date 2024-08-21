@@ -8,13 +8,14 @@
 		    	<a href="/user/{{ post.username }}">{{ post.username }}</a>
 		    </div>
 			<a href="/post/{{post.post_id}}">comments [ {{ post.comment_count }} ]</a><br>
+			<a href="/post_paged/{{post.post_id}}">paged_view</a><br>
 		    <a href="/post/versions/{{post.post_id}}">versions</a>
 			<a href="#{{post.post_id}}">share</a>
 		</div>
 		<hr>
 	{% endfor %}
 	
-	page: {{ pagenum }} / {{ page_count }}<br>
+	page: {{ pagenum }}/{{ page_count }}<br>
 
     {% for page in page_range %}
         <a href="/posts?page={{page}}">{{page}}</a>

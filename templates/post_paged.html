@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+
+	-- this is paged post view --
+	<div class="post" id="{{post.post_id}}">
+		<div class="post" id="{{post.post_id}}">
+			{{ post.content }}
+		    <div class="author" style="color: grey;">by 
+		    	<a href="/user/{{ post.username }}">{{ post.username }}</a>
+		    </div>
+		    <a href="/post/versions/{{post.post_id}}">versions</a>
+			<a href="#{{post.post_id}}">share</a>
+		</div>
+		<hr>
+	</div>
+
+	<div class="comments" style="margin-left: 50px;">
+	{% for post in comments %}
+		<div class="post" id="{{post.post_id}}">
+			{{ post.content }}
+		    <div class="author" style="color: grey;">by 
+		    	<a href="/user/{{ post.username }}">{{ post.username }}</a>
+		    </div>
+		    <a href="/post/versions/{{post.post_id}}">versions</a>
+			<a href="#{{post.post_id}}">share</a>
+		</div>
+		<hr>
+	{% endfor %}
+	</div>
+
+	page: {{ pagenum }}/{{ page_count }}<br>
+
+    {% for page in page_range %}
+        <a href="/post_paged/{{post.root_id}}?page={{page}}">{{page}}</a>
+    {% endfor %}
+
+{% endblock %}
