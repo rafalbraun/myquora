@@ -54,21 +54,21 @@ QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 
 ## select post queries
-
-QUERY_COUNT_POST_VERSIONS="select count(post_id) from posts where post_id = ? or source_id = ?"
-QUERY_SELECT_POST_VERSIONS="select post_id, root_id, parent_id, content, username from posts where post_id = ? or source_id = ? order by created_at limit ? offset ?"
-
-QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null and username=? group by root_id) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
-QUERY_COUNT_USER_POSTS=""
-
-QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
-QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
-
-QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
+QUERY_SELECT_POST_WITH_COMMENTS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
 
+## for post versions paged view
+QUERY_COUNT_POST_VERSIONS="select count(post_id) from posts where post_id = ? or source_id = ?"
+QUERY_SELECT_POST_VERSIONS="select post_id, root_id, parent_id, content, username from posts where post_id = ? or source_id = ? order by created_at limit ? offset ?"
+## for user posts paged view
+QUERY_COUNT_USER_POSTS="select count(distinct root_id) from posts where source_id is null and username=?"
+QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null and username=? group by root_id order by root_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+## for posts paged view on front page
+QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
+## for paged view of single post
+QUERY_SELECT_POST_COMMENTS="select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?"
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
-QUERY_SELECT_POST_WITH_OFFSET="select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?"
 
 def login_required(f):
 	@wraps(f)
@@ -95,7 +95,7 @@ def index():
 def post_smart_view(root_id):
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
-		rows = cursor.execute(QUERY_SELECT_POST_WITH_COMMETS, (root_id,)).fetchall()
+		rows = cursor.execute(QUERY_SELECT_POST_WITH_COMMENTS, (root_id,)).fetchall()
 		if len(rows) == 0:
 			return render_template("not_found.html", post_id=root_id)
 		result = build_post_hierarchy(rows)
@@ -121,7 +121,7 @@ def post_paged_view(root_id):
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		count = cursor.execute(QUERY_COUNT_POST_COMMENTS, (root_id,)).fetchone()[0]
-		rows = cursor.execute(QUERY_SELECT_POST_WITH_OFFSET, (root_id,page_size,offset)).fetchall()
+		rows = cursor.execute(QUERY_SELECT_POST_COMMENTS, (root_id,page_size,offset)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
 		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
@@ -138,13 +138,14 @@ def post_versions(post_id):
 
 @app.route("/user/<string:username>", methods=["GET"])
 def user_posts(username):
+	pagenum = request.args.get('page', default=1, type=int)
+	offset = (pagenum-1) * page_size
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
-		rows = cursor.execute(QUERY_SELECT_USER_POSTS, (username,)).fetchall()
-		posts = []
-		for row in rows:
-			posts.append(Post(*row))
-		return render_template("user_posts.html", posts=posts, username=username)
+		count = cursor.execute(QUERY_COUNT_USER_POSTS, (username,)).fetchone()[0]
+		rows = cursor.execute(QUERY_SELECT_USER_POSTS, (username,page_size,offset)).fetchall()
+		posts, page_count, page_range = pagination(count, rows)
+		return render_template("user_posts.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post/create", methods=["GET","POST"])
 @login_required

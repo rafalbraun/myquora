@@ -35,7 +35,7 @@ pragma foreign_keys=on;
 ## [ ] handle current date, deleted date
 ## [ ] change in schema - attr username into created_by
 ## [ ] when doing paged view for posts - do also join on parent to show parent on page
-
+## [ ] when showing user posts on paged view - join also root post if comment
 
 select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 
 	from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id limit 10 offset 0) t1 
