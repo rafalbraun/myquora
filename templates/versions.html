@@ -15,4 +15,10 @@
 		<hr>
 	{% endfor %}
 
+	page: {{ pagenum }}/{{ page_count }}<br>
+	
+    {% for page in page_range %}
+        <a href="/post/versions/{{post_id}}?page={{page}}">{{page}}</a>
+    {% endfor %}
+
 {% endblock %}
