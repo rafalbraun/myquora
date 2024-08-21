@@ -68,7 +68,7 @@ QUERY_SELECT_POST_WITH_COMMETS="select post_id, root_id, parent_id, content, use
 QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
 
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
-QUERY_SELECT_POST_WITH_OFFSET="select post_id, root_id, parent_id, content, username from posts where root_id=? and post_id <> root_id order by created_at limit ? offset ?"
+QUERY_SELECT_POST_WITH_OFFSET="select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?"
 
 def login_required(f):
 	@wraps(f)
@@ -160,7 +160,7 @@ def post_create():
 			cursor.execute(QUERY_CREATE_POST, (content,username))
 			lastrowid = cursor.lastrowid
 			cursor.execute(QUERY_AFTER_CREATE, (lastrowid,lastrowid,lastrowid))
-			return redirect(url_for(f'post', root_id=lastrowid))
+			return redirect(url_for(f'post_smart_view', root_id=lastrowid))
 
 @app.route("/post/<int:parent_id>/comment", methods=["POST"])
 @login_required
@@ -181,7 +181,7 @@ def post_comment(parent_id):
 		parent = cursor.execute(QUERY_SELECT_POST, (parent_id,)).fetchone()
 		post_id, root_id, _, _, _ = parent
 		comment = cursor.execute(QUERY_COMMENT_POST, (root_id, parent_id, content, username))
-		return redirect(url_for(f'post', root_id=root_id))
+		return redirect(url_for(f'post_smart_view', root_id=root_id))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
 @login_required
@@ -200,7 +200,7 @@ def post_update(post_id):
 			post_id, root_id, parent_id, content, username = post
 			cursor.execute(QUERY_ARCHIVE_POST, (content,username,post_id))
 			cursor.execute(QUERY_UPDATE_POST, (new_content,post_id))
-			return redirect(url_for(f'post', root_id=root_id))
+			return redirect(url_for(f'post_smart_view', root_id=root_id))
 
 @app.route("/post/delete/<int:post_id>", methods=["GET"])
 def post_delete():
