@@ -107,20 +107,18 @@ def post_paged_view(root_id):
 		if count == 0:
 			return render_template("not_found.html", post_id=root_id)
 
-		row = cursor.execute(QUERY_SELECT_POST, (root_id,)).fetchone()
-		post = Post(*row)
-
 		rows = cursor.execute(QUERY_SELECT_POST_WITH_OFFSET, (root_id,page_size,offset)).fetchall()
 		if len(rows) == 0:
 			return render_template("not_found.html", post_id=root_id)
-		comments = []
+
+		posts = []
 		for row in rows:
-			comments.append(Post(*row))
+			posts.append(Post(*row))
 
 		page_count = math.ceil(count/page_size)
 		page_range = range(1, page_count+1)
 
-		return render_template("post_paged.html", post=post, comments=comments, page_count=page_count, pagenum=pagenum, page_range=page_range)	
+		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)	
 
 @app.route("/post/<int:root_id>", methods=["GET"])
 def post_smart_view(root_id):
