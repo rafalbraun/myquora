@@ -11,6 +11,14 @@
 		    <a href="/post/versions/{{post.post_id}}">versions</a>
 			<a href="#{{post.post_id}}">share</a>
 		</div>
+
+		{% if request.cookies.get('auth') %}
+		<form action="/post/{{post.post_id}}/comment" method="post">
+		<input type="text" name="content">
+		<button type="submit">Create Comment</button>
+		</form>
+		{% endif %}
+
 		<hr>
 	{% endfor %}
 	</div>

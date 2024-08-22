@@ -69,10 +69,9 @@ QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 ## for paged view of single post
 QUERY_SELECT_POST_COMMENTS="select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?"
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
-
-
-QUERY_COUNT_USER_COMMENTS=""
-QUERY_SELECT_USER_COMMENTS=""
+## for user comments paged view
+QUERY_SELECT_USER_COMMENTS="select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?"
+QUERY_COUNT_USER_COMMENTS="select count(post_id) from posts where username=? and source_id is null and root_id <> post_id"
 
 def login_required(f):
 	@wraps(f)
@@ -159,7 +158,7 @@ def user_comments(username):
 		cursor = conn.cursor()
 		count = cursor.execute(QUERY_COUNT_USER_COMMENTS, (username,)).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_USER_COMMENTS, (username,page_size,offset)).fetchall()
-		posts, page_count, page_range = pagination(count, rows) ## build !!!
+		posts, page_count, page_range = pagination(count, rows)
 		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post/create", methods=["GET","POST"])

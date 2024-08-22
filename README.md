@@ -36,13 +36,14 @@ pragma foreign_keys=on;
 ## [ ] change in schema - attr username into created_by
 ## [ ] when doing paged view for posts - do also join on parent to show parent on page
 ## [ ] when showing user posts on paged view - join also root post if comment
+## [ ] create comment BUT the user was on a paged view -- problem
 
 select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 
 	from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id limit 10 offset 0) t1 
 	left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id;
 
 
-
+-- comments query
 select t1.*, t2.* from
 (select post_id, root_id, parent_id from posts where username="admin" and source_id is null and root_id <> post_id) t1
 left join
@@ -52,16 +53,15 @@ on t1.root_id = t2.post_id
 
 
 
-select * from posts where root_id=23 and source_id is null and post_id <> root_id 
+select post_id, root_id, parent_id, content, username from posts where root_id=23 and source_id is null and post_id <> root_id 
 union 
-select * from posts where root_id=23 and source_id is null and post_id = root_id;
+select post_id, root_id, parent_id, content, username from posts where root_id=23 and source_id is null and post_id = root_id;
 
 
-
-
-
-
-
-
-
+select t2.* from
+(select post_id, root_id, parent_id from posts where username="admin" and source_id is null and root_id <> post_id) t1
+left join
+(select post_id, root_id, parent_id from posts) t2
+on t1.root_id = t2.post_id
+;
 

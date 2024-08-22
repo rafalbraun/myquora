@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 
-	-- user posts: {{username}} --
+	-- user posts: {{username}} <a href="/user/posts/{{username}}">posts</a> <a href="/user/comments/{{username}}">comments</a> --
 	<hr>
 
 	{% for post in posts %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+	-- user comments: {{username}} <a href="/user/posts/{{username}}">posts</a> <a href="/user/comments/{{username}}">comments</a> --
+	<hr>
+
+	{% for post in posts %}
+
+		{% if post is not none %}
+	        {% with post=post, auth=request.cookies.get('auth') %}
+	            {% include "comments.html" %}
+	        {% endwith %}
+		{% endif %}
+
+	{% endfor %}
+
+	page: {{ pagenum }}/{{ page_count }}<br>
+
+    {% for page in page_range %}
+        <a href="/user/comments/{{username}}?page={{page}}">{{page}}</a>
+    {% endfor %}
+
+{% endblock %}
