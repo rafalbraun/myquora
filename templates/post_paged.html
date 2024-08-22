@@ -4,7 +4,7 @@
 	<div class="post" id="{{posts[0].post_id}}" style="background: lightgrey">
 		{{ posts[0].content }}
 	    <div class="author" style="color: grey;">by 
-	    	<a href="/user/{{ posts[0].username }}">{{ posts[0].username }}</a>
+	    	<a href="/user/posts/{{ posts[0].username }}">{{ posts[0].username }}</a>
 	    </div>
 	    <a href="/post/versions/{{posts[0].post_id}}">versions</a>
 		<a href="#{{posts[0].post_id}}">share</a>
@@ -16,7 +16,7 @@
 		<div class="post" id="{{post.post_id}}">
 			{{ post.content }}
 		    <div class="author" style="color: grey;">by 
-		    	<a href="/user/{{ post.username }}">{{ post.username }}</a>
+		    	<a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
 		    </div>
 		    <a href="/post/versions/{{post.post_id}}">versions</a>
 			<a href="#{{post.post_id}}">share</a>
