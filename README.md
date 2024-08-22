@@ -24,18 +24,18 @@ pragma foreign_keys=on;
 ## [x] counting comments and showing under post
 ## [x] requires_auth
 ## [x] creating comment/post as logged user
-## [ ] paging
+## [x] paging
+## [x] versions - keep ordering by time, paging
+## [x] when doing paged view for posts - do also join on parent to show parent on page
+## [x] when showing user posts on paged view - join also root post if comment
 ## [ ] validations
 ## [ ] load pictures
 ## [ ] truncate
 ## [ ] implement secure cookies
 ## [ ] change/reset password (with email confirmation?)
-## [ ] versions - keep ordering by time, paging
 ## [ ] implement created_at, created_by etc ...
 ## [ ] handle current date, deleted date
 ## [ ] change in schema - attr username into created_by
-## [ ] when doing paged view for posts - do also join on parent to show parent on page
-## [ ] when showing user posts on paged view - join also root post if comment
 ## [ ] create comment BUT the user was on a paged view -- problem
 ## [ ] maybe add endpoint for post paged / last page ?
 ## [ ] make sure only op can update or delete post

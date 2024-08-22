@@ -2,7 +2,7 @@
     {% include "just_post.html" %}
 {% endwith %}
 
-<div class="comments" style="margin-left: 50px">
+<div class="replies" style="margin-left: 50px">
 {% if (post.replies is defined) and post.replies %}
     {% for comment in post.replies %}
         {% with post=comment %}

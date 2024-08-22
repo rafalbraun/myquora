@@ -12,7 +12,6 @@
 	{% endfor %}
 
 	page: {{ pagenum }}/{{ page_count }}<br>
-
     {% for page in page_range %}
         <a href="/user/posts/{{username}}?page={{page}}">{{page}}</a>
     {% endfor %}

@@ -4,12 +4,13 @@
 	{% for post in posts %}
 		{% with post=post, auth=request.cookies.get('auth') %}
 		    {% include "just_post.html" %}
+	    	<a href="/post/{{post.post_id}}">smart_view [ {{post.comment_count}} ]</a>
+	    	<a href="/post_paged/{{post.post_id}}">paged_view [ {{post.comment_count}} ]</a>
 		{% endwith %}
 		<hr>
 	{% endfor %}
 	
 	page: {{ pagenum }}/{{ page_count }}<br>
-
     {% for page in page_range %}
         <a href="/posts?page={{page}}">{{page}}</a>
     {% endfor %}

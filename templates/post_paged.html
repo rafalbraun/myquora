@@ -20,7 +20,6 @@
 	</div>
 
 	page: {{ pagenum }}/{{ page_count }}<br>
-
     {% for page in page_range %}
         <a href="/post_paged/{{root_id}}?page={{page}}">{{page}}</a>
     {% endfor %}
