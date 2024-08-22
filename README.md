@@ -53,7 +53,9 @@ on t1.root_id = t2.post_id
 
 
 
-select post_id, root_id, parent_id, content, username from posts where root_id=23 and source_id is null and post_id <> root_id 
+select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?
+
+select post_id, root_id, parent_id, content, username from posts where root_id=23 and source_id is null and post_id <> root_id order by created_at limit ? offset ?
 union 
 select post_id, root_id, parent_id, content, username from posts where root_id=23 and source_id is null and post_id = root_id;
 
@@ -64,4 +66,3 @@ left join
 (select post_id, root_id, parent_id from posts) t2
 on t1.root_id = t2.post_id
 ;
-

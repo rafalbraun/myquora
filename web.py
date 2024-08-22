@@ -67,7 +67,13 @@ QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content
 QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
 QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 ## for paged view of single post
-QUERY_SELECT_POST_COMMENTS="select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?"
+QUERY_SELECT_POST_COMMENTS='''
+select * from(
+select post_id, root_id, parent_id, content, username from posts where root_id=? and source_id is null and post_id <> root_id limit ? offset ?
+)
+union 
+select post_id, root_id, parent_id, content, username from posts where root_id=? and source_id is null and post_id = root_id
+'''
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
 ## for user comments paged view
 QUERY_SELECT_USER_COMMENTS="select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?"
@@ -124,7 +130,7 @@ def post_paged_view(root_id):
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		count = cursor.execute(QUERY_COUNT_POST_COMMENTS, (root_id,)).fetchone()[0]
-		rows = cursor.execute(QUERY_SELECT_POST_COMMENTS, (root_id,page_size,offset)).fetchall()
+		rows = cursor.execute(QUERY_SELECT_POST_COMMENTS, (root_id,page_size,offset,root_id)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
 		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 

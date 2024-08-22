@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
 
-	<div class="posts">
-	{% for post in posts %}
+	<div class="post" id="{{posts[0].post_id}}" style="background: lightgrey">
+		{{ posts[0].content }}
+	    <div class="author" style="color: grey;">by 
+	    	<a href="/user/{{ posts[0].username }}">{{ posts[0].username }}</a>
+	    </div>
+	    <a href="/post/versions/{{posts[0].post_id}}">versions</a>
+		<a href="#{{posts[0].post_id}}">share</a>
+	</div>
+	<hr>
+
+	<div class="replies" style="margin-left: 50px;">
+	{% for post in posts[1:] %}
 		<div class="post" id="{{post.post_id}}">
 			{{ post.content }}
 		    <div class="author" style="color: grey;">by 
