@@ -70,6 +70,10 @@ QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 QUERY_SELECT_POST_COMMENTS="select post_id, root_id, parent_id, content, username from posts where root_id=? order by created_at limit ? offset ?"
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
 
+
+QUERY_COUNT_USER_COMMENTS=""
+QUERY_SELECT_USER_COMMENTS=""
+
 def login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
@@ -136,7 +140,7 @@ def post_versions(post_id):
 		posts, page_count, page_range = pagination(count, rows)
 		return render_template("versions.html", post_id=post_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
-@app.route("/user/<string:username>", methods=["GET"])
+@app.route("/user/posts/<string:username>", methods=["GET"])
 def user_posts(username):
 	pagenum = request.args.get('page', default=1, type=int)
 	offset = (pagenum-1) * page_size
@@ -146,6 +150,17 @@ def user_posts(username):
 		rows = cursor.execute(QUERY_SELECT_USER_POSTS, (username,page_size,offset)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
 		return render_template("user_posts.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
+
+@app.route("/user/comments/<string:username>", methods=["GET"])
+def user_comments(username):
+	pagenum = request.args.get('page', default=1, type=int)
+	offset = (pagenum-1) * page_size
+	with sqlite3.connect(dbname) as conn:
+		cursor = conn.cursor()
+		count = cursor.execute(QUERY_COUNT_USER_COMMENTS, (username,)).fetchone()[0]
+		rows = cursor.execute(QUERY_SELECT_USER_COMMENTS, (username,page_size,offset)).fetchall()
+		posts, page_count, page_range = pagination(count, rows) ## build !!!
+		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post/create", methods=["GET","POST"])
 @login_required

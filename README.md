@@ -42,3 +42,26 @@ select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment
 	left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id;
 
 
+
+select t1.*, t2.* from
+(select post_id, root_id, parent_id from posts where username="admin" and source_id is null and root_id <> post_id) t1
+left join
+(select post_id, root_id, parent_id from posts) t2
+on t1.root_id = t2.post_id
+;
+
+
+
+select * from posts where root_id=23 and source_id is null and post_id <> root_id 
+union 
+select * from posts where root_id=23 and source_id is null and post_id = root_id;
+
+
+
+
+
+
+
+
+
+
