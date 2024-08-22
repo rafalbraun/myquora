@@ -14,13 +14,14 @@
     	<a href="/posts">Posts</a>
 	    </div>
     	<div class="right">
-	    {% if request.cookies.get('auth') %}
-	    	<a href="/user/posts/{{ request.cookies.get('auth') }}">{{ request.cookies.get('auth') }}</a>
-	        <a href="{{ url_for('signout') }}">Sign Out</a>
-	    {% else %}
-	        <a href="{{ url_for('signup') }}">Sign Up</a>
-	        <a href="{{ url_for('signin') }}">Sign In</a>
-	    {% endif %}
+    		{% set auth = request.cookies.get('auth') %}    		
+		    {% if auth %}
+		    	<a href="/user/posts/{{ auth }}">{{ auth }}</a>
+		        <a href="{{ url_for('signout') }}">Sign Out</a>
+		    {% else %}
+		        <a href="{{ url_for('signup') }}">Sign Up</a>
+		        <a href="{{ url_for('signin') }}">Sign In</a>
+		    {% endif %}
 		</div>
     </div>
 </header>

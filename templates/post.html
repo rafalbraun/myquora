@@ -3,7 +3,7 @@
 
     [ {{ comment_count }} comments ]<br>
     
-	{% if post is not none %}
+	{% if post is defined %}
         {% with post=post, auth=request.cookies.get('auth') %}
             {% include "comments.html" %}
         {% endwith %}

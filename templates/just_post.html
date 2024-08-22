@@ -7,12 +7,12 @@
     <a href="/post/versions/{{post.post_id}}">versions</a>
     <a href="#{{post.post_id}}">share</a>
 
-    {% if auth %}
+    {% if auth is defined and auth == post.username %}
     <a href="/post/update/{{post.post_id}}">update</a>
     {% endif %}
 </div>
 
-{% if auth %}
+{% if auth is defined %}
 <form action="/post/{{post.post_id}}/comment" method="post">
 <input type="text" name="content">
 <button type="submit">Create Comment</button>
