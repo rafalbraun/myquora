@@ -4,6 +4,8 @@
     <div class="author" style="color: grey;">by 
         <a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
     </div>
+    <a href="/post/versions/{{post.post_id}}">versions</a>
+    <a href="#{{post.post_id}}">share</a>
 
     {% if auth %}
     <a href="/post/update/{{post.post_id}}">update</a>

@@ -76,14 +76,24 @@ select post_id, root_id, parent_id, content, username from posts where root_id=?
 '''
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
 ## for user comments paged view
-QUERY_SELECT_USER_COMMENTS="select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?"
+## select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?
+QUERY_SELECT_USER_COMMENTS='''
+select 
+	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, 
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username 
+from 
+	(select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?) t1
+left join
+	(select post_id, root_id, parent_id, content, username from posts) t2
+on t1.root_id = t2.post_id
+'''
 QUERY_COUNT_USER_COMMENTS="select count(post_id) from posts where username=? and source_id is null and root_id <> post_id"
 
 def login_required(f):
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
 		auth_cookie = request.cookies.get('auth')
-		if not auth_cookie or auth_cookie != USERNAME:
+		if not auth_cookie:
 			return redirect(url_for('signin'))
 		return f(*args, **kwargs)
 	return decorated_function
@@ -164,7 +174,10 @@ def user_comments(username):
 		cursor = conn.cursor()
 		count = cursor.execute(QUERY_COUNT_USER_COMMENTS, (username,)).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_USER_COMMENTS, (username,page_size,offset)).fetchall()
-		posts, page_count, page_range = pagination(count, rows)
+		posts = build_post_parents(rows)
+		roots = [(post.post_id, post.root_id, post.parent_id, post.content, post.username) for post in posts]
+		_, page_count, page_range = pagination(count, roots)
+		print(posts)
 		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post/create", methods=["GET","POST"])
@@ -305,6 +318,17 @@ def build_post_hierarchy(tuples):
 			posts[parent_id].add_reply(posts[post_id])
 
 	return root_posts
+
+def build_post_parents(tuples):
+	posts = []
+
+	for post_id, root_id, parent_id, content, username, parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username in tuples:
+		parent = Post(parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username)
+		reply = Post(post_id, root_id, parent_id, content, username)
+		parent.add_reply(reply)
+		posts.append(parent)
+
+	return posts
 
 if __name__=="__main__":
 	app.run(debug=True, host='0.0.0.0', port=8080)
