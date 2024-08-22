@@ -5,7 +5,6 @@
 	<hr>
 
 	{% for post in posts %}
-
 		<div style="background: lightgrey">
 		{% with post=post, auth=request.cookies.get('auth') %}
 		    {% include "just_post.html" %}
