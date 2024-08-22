@@ -177,7 +177,6 @@ def user_comments(username):
 		posts = build_post_parents(rows)
 		roots = [(post.post_id, post.root_id, post.parent_id, post.content, post.username) for post in posts]
 		_, page_count, page_range = pagination(count, roots)
-		print(posts)
 		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 
 @app.route("/post/create", methods=["GET","POST"])

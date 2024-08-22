@@ -38,6 +38,8 @@ pragma foreign_keys=on;
 ## [ ] when showing user posts on paged view - join also root post if comment
 ## [ ] create comment BUT the user was on a paged view -- problem
 ## [ ] maybe add endpoint for post paged / last page ?
+## [ ] make sure only op can update or delete post
+## [ ] suggest paged view but only on root post
 
 
 select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 

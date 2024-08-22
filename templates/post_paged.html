@@ -1,34 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
 
-	<div class="post" id="{{posts[0].post_id}}" style="background: lightgrey">
-		{{ posts[0].content }}
-	    <div class="author" style="color: grey;">by 
-	    	<a href="/user/posts/{{ posts[0].username }}">{{ posts[0].username }}</a>
-	    </div>
-	    <a href="/post/versions/{{posts[0].post_id}}">versions</a>
-		<a href="#{{posts[0].post_id}}">share</a>
+	<div style="background: lightgrey">
+		{% with post=posts[0], auth=request.cookies.get('auth') %}
+		    {% include "just_post.html" %}
+		{% endwith %}
+		<hr>
 	</div>
-	<hr>
 
 	<div class="replies" style="margin-left: 50px;">
 	{% for post in posts[1:] %}
-		<div class="post" id="{{post.post_id}}">
-			{{ post.content }}
-		    <div class="author" style="color: grey;">by 
-		    	<a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
-		    </div>
-		    <a href="/post/versions/{{post.post_id}}">versions</a>
-			<a href="#{{post.post_id}}">share</a>
-		</div>
-
-		{% if request.cookies.get('auth') %}
-		<form action="/post/{{post.post_id}}/comment" method="post">
-		<input type="text" name="content">
-		<button type="submit">Create Comment</button>
-		</form>
+		{% if post is not none %}
+	        {% with post=post, auth=request.cookies.get('auth') %}
+	            {% include "comments.html" %}
+	        {% endwith %}
 		{% endif %}
-
 		<hr>
 	{% endfor %}
 	</div>

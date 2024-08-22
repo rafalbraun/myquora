@@ -1,25 +1,6 @@
-<div class="post" id="{{post.post_id}}">
-    {{ post.content }}
-    <br>
-    <div class="author" style="color: grey;">by 
-        <a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
-    </div>
-    <a href="/post/versions/{{post.post_id}}">versions</a>
-    <a href="#{{post.post_id}}">share</a>
-
-    {% if auth %}
-    <a href="/post/update/{{post.post_id}}">update</a>
-    <a href="/post/versions/{{post.post_id}}">versions</a>
-    <a href="#{{post.post_id}}">share</a>
-    {% endif %}
-</div>
-
-{% if auth %}
-<form action="/post/{{post.post_id}}/comment" method="post">
-<input type="text" name="content">
-<button type="submit">Create Comment</button>
-</form>
-{% endif %}
+{% with post=post, auth=request.cookies.get('auth') %}
+    {% include "just_post.html" %}
+{% endwith %}
 
 <div class="comments" style="margin-left: 50px">
 {% if (post.replies is defined) and post.replies %}

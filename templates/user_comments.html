@@ -6,13 +6,10 @@
 
 	{% for post in posts %}
 
-		<div class="post" id="{{post.post_id}}" style="background: lightgrey">
-			{{ post.content }}
-		    <div class="author" style="color: grey;">by 
-		    	<a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
-		    </div>
-		    <a href="/post/versions/{{post.post_id}}">versions</a>
-			<a href="#{{post.post_id}}">share</a>
+		<div style="background: lightgrey">
+		{% with post=post, auth=request.cookies.get('auth') %}
+		    {% include "just_post.html" %}
+		{% endwith %}
 		</div>
 
 		<div class="comments" style="margin-left: 50px">
@@ -25,17 +22,7 @@
 		{% endif %}
 		</div>
 
-
-
-<!--
-		{% if post is not none %}
-	        {% with post=post, auth=request.cookies.get('auth') %}
-	            {% include "comments.html" %}
-	        {% endwith %}
-		{% endif %}
--->
 		<hr>
-
 	{% endfor %}
 
 	page: {{ pagenum }}/{{ page_count }}<br>
