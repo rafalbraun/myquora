@@ -9,9 +9,9 @@
     {% else %}
     <a href="/post/versions/{{post.source_id}}">versions {{ post.source_id }} </a>
     {% endif %}
-
+    
     <a href="#{{post.post_id}}">share</a>
-
+    
     {% if auth is defined and auth == post.username %}
     <a href="/post/update/{{post.post_id}}">update</a>
     {% endif %}

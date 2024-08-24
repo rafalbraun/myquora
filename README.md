@@ -45,6 +45,7 @@ pragma foreign_keys=on;
 ## [ ] add reportig and banning !!
 ## [ ] tags in a tree
 ## [ ] problem - on versions there is option to comment, it shouldnt be there
+## [ ] on post paged - redirect to last page
 ## [ ] TESTS !!!!!
 
 

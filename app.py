@@ -131,7 +131,7 @@ select * from(
 select post_id, root_id, parent_id, content, username, 0, source_id from posts where root_id=? and source_id is null and post_id <> root_id limit ? offset ?
 )
 union 
-select post_id, root_id, parent_id, content, username from posts where root_id=? and source_id is null and post_id = root_id
+select post_id, root_id, parent_id, content, username, 0, source_id from posts where root_id=? and source_id is null and post_id = root_id
 '''
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
 
