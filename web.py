@@ -59,16 +59,67 @@ QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 
 ## select post queries
-QUERY_SELECT_POST_WITH_COMMENTS="select post_id, root_id, parent_id, content, username from posts where root_id = ? and source_id is null"
-QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from posts where post_id = ? and source_id is null"
+QUERY_SELECT_POST_WITH_COMMENTS='''
+select 
+	post_id, root_id, parent_id, content, username 
+from posts 
+where root_id = ? 
+	and source_id is null
+'''
+QUERY_SELECT_POST='''
+select 
+	post_id, root_id, parent_id, content, username 
+from posts 
+where post_id = ? 
+	and source_id is null
+'''
 
 ## for post versions paged view
-QUERY_COUNT_POST_VERSIONS="select count(post_id) from posts where post_id = ? or source_id = ?"
-QUERY_SELECT_POST_VERSIONS="select post_id, root_id, parent_id, content, username from posts where post_id = ? or source_id = ? order by created_at limit ? offset ?"
+QUERY_COUNT_POST_VERSIONS='''
+select 
+	count(post_id) 
+from posts 
+where post_id = ? 
+	or source_id = ?
+'''
+QUERY_SELECT_POST_VERSIONS='''
+select 
+	post_id, root_id, parent_id, content, username 
+from posts 
+where post_id = ? 
+	or source_id = ?
+order by created_at 
+limit ? 
+offset ?
+'''
 
 ## for user posts paged view
-QUERY_COUNT_USER_POSTS="select count(distinct root_id) from posts where source_id is null and username=?"
-QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null and username=? group by root_id order by root_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_COUNT_USER_POSTS='''
+select 
+	count(distinct root_id) 
+from posts 
+where source_id is null 
+	and username=?
+'''
+QUERY_SELECT_USER_POSTS='''
+select 
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 
+from (
+		select 
+			root_id, count(post_id) as comment_count 
+		from posts 
+		where source_id is null 
+			and username=? 
+		group by root_id 
+		order by root_id limit ? offset ?
+	) t1 
+left join (
+		select 
+			post_id, root_id, parent_id, content, username 
+		from posts
+	) t2 
+on t1.root_id = t2.post_id
+'''
 
 ## for posts paged view on front page
 QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
@@ -242,6 +293,7 @@ def post_update(post_id):
 			return redirect(url_for(f'post_smart_view', root_id=post.root_id, _anchor=lastrowid))
 
 @app.route("/post/delete/<int:post_id>", methods=["GET"])
+@login_required
 def post_delete():
 	pass
 
@@ -252,6 +304,10 @@ def signup():
 	if request.method == 'POST':
 		username = request.form.get('username')
 		password = request.form.get('password')
+
+		errors = validate_user_signup(username, password)
+		if len(errors) != 0: return render_template("errors.html", errors=errors)
+
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			cursor.execute(QUERY_CREATE_USER, (username, password))		## TODO check if not exists
@@ -264,11 +320,13 @@ def signin():
 	if request.method == 'POST':
 		username = request.form.get('username')
 		password = request.form.get('password')
+		if len(password) < 3 or len(password) > 30 or len(username) < 3 or len(username) > 30:
+			return "Wrong username or password", 401
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			row = cursor.execute(QUERY_SELECT_USER, (username,)).fetchone()
 			if row is None:
-				return 'no such user', 401
+				return 'No such user', 401
 			else:
 				if username == row[0] and password == row[1]:
 					# Create a response and set a cookie if login is successful

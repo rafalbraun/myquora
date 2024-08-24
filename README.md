@@ -41,6 +41,9 @@ pragma foreign_keys=on;
 ## [ ] make sure only op can update or delete post
 ## [ ] suggest paged view but only on root post
 ## [ ] on user_posts.html load also comment count on root post
+## [ ] add levels on posts ??
+## [ ] add reportig and banning !!
+## [ ] tags in a tree
 ## [ ] TESTS !!!!!
 
 
