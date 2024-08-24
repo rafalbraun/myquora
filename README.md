@@ -90,5 +90,4 @@ on t1.root_id = t2.post_id
 ;
 
 
-
-
+curl -v GET http://localhost:8080/post/create -H "Cookie: auth=admin"

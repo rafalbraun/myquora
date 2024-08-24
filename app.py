@@ -246,7 +246,10 @@ def post_create():
 	if request.method == 'POST':
 		content = request.form.get('content')
 		username = request.cookies.get('auth')
-		## TODO validate content
+
+		errors = validate_post_create(content)
+		if len(errors) != 0: return render_template("errors.html", errors=errors)
+
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			cursor.execute(QUERY_CREATE_POST, (content,username))
@@ -283,6 +286,10 @@ def post_update(post_id):
 			return render_template("post_update.html", post=post)
 	if request.method == 'POST':
 		new_content = request.form.get('content')
+		
+		errors = validate_post_update(new_content)
+		if len(errors) != 0: return render_template("errors.html", errors=errors)
+		
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
