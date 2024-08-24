@@ -143,7 +143,7 @@ select
 from 
 	(select post_id, root_id, parent_id, content, username, source_id from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?) t1
 left join
-	(select post_id, root_id, parent_id, content, username from, source_id posts) t2
+	(select post_id, root_id, parent_id, content, username, source_id from posts) t2
 on t1.root_id = t2.post_id
 '''
 QUERY_COUNT_USER_COMMENTS="select count(post_id) from posts where username=? and source_id is null and root_id <> post_id"
@@ -235,7 +235,7 @@ def user_comments(username):
 		count = cursor.execute(QUERY_COUNT_USER_COMMENTS, (username,)).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_USER_COMMENTS, (username,page_size,offset)).fetchall()
 		posts = build_post_parents(rows)
-		roots = [(post.post_id, post.root_id, post.parent_id, post.content, post.username) for post in posts]
+		roots = [(post.post_id, post.root_id, post.parent_id, post.content, post.username, post.comment_count, post.source_id) for post in posts]
 		_, page_count, page_range = pagination(count, roots)
 		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
 

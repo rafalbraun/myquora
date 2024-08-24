@@ -16,7 +16,11 @@ to not make unnecessary just_post_no_comment.html only for versions view I just 
 
 	page: {{ pagenum }}/{{ page_count }}<br>
     {% for page in page_range %}
+    	{% if page == pagenum %}
+        <a href="/post/versions/{{post_id}}?page={{page}}">[ {{page}} ]</a>
+    	{% else %}
         <a href="/post/versions/{{post_id}}?page={{page}}">{{page}}</a>
+    	{% endif %}
     {% endfor %}
 
 {% endblock %}

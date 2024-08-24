@@ -28,7 +28,11 @@
 
 	page: {{ pagenum }}/{{ page_count }}<br>
     {% for page in page_range %}
+    	{% if page == pagenum %}
+        <a href="/user/comments/{{username}}?page={{page}}">[ {{page}} ]</a>
+    	{% else %}
         <a href="/user/comments/{{username}}?page={{page}}">{{page}}</a>
+    	{% endif %}
     {% endfor %}
 
 {% endblock %}

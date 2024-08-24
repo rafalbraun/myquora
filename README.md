@@ -93,3 +93,12 @@ on t1.root_id = t2.post_id
 
 
 curl -v GET http://localhost:8080/post/create -H "Cookie: auth=admin"
+
+select 
+	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, 0, t1.source_id,
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, 0, t2.source_id
+from 
+	(select post_id, root_id, parent_id, content, username, source_id from posts where username="admin" and source_id is null and root_id <> post_id order by created_at limit 5 offset 0) t1
+left join
+	(select post_id, root_id, parent_id, content, username from, source_id posts) t2
+on t1.root_id = t2.post_id
