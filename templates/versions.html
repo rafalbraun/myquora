@@ -9,7 +9,7 @@ to not make unnecessary just_post_no_comment.html only for versions view I just 
 
 	{% for post in posts %}
 		{% with post=post %}
-		    {% include "just_post.html" %}
+		    {% include "just_post_no_comment.html" %}
 		{% endwith %}
 		<hr>
 	{% endfor %}

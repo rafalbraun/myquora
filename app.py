@@ -194,11 +194,12 @@ def posts():
 
 @app.route("/post_paged/<int:root_id>", methods=["GET"])
 def post_paged_view(root_id):
-	pagenum = request.args.get('page', default=1, type=int)
-	offset = (pagenum-1) * page_size
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		count = cursor.execute(QUERY_COUNT_POST_COMMENTS, (root_id,)).fetchone()[0]
+		last_page = math.ceil(count/page_size)
+		pagenum = request.args.get('page', default=last_page, type=int)
+		offset = (pagenum-1) * page_size
 		rows = cursor.execute(QUERY_SELECT_POST_COMMENTS, (root_id,page_size,offset,root_id)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
 		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
