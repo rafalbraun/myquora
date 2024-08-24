@@ -2,11 +2,8 @@
 {% block content %}
 
 <form action="/post/update/{{post.post_id}}" method="post">
-
-	<textarea id="content" name="content">{{post.content}}</textarea>
-	<br>
+	<textarea name="content">{{post.content}}</textarea><br>
 	<button type="submit">update</button>
-
 </form>
 
 {% endblock %}

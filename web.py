@@ -1,20 +1,25 @@
 #!/usr/bin/python3
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, Response, make_response, jsonify
+from functools import wraps
+from pprint import pprint
 import sqlite3
 import json
-from pprint import pprint
-from functools import wraps
 import math
+
+from validations import *
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for securely signing the session cookie
 dbname = "posts.db"
 page_size = 5
 
-# Hardcoded credentials for simplicity
-USERNAME = 'admin'
-PASSWORD = 'password'
-
+QUERY_CREATE_SESSIONS_TABLE = '''
+create table if not exists SESSIONS (
+	session_id 	TEXT PRIMARY KEY
+	username 	TEXT,
+	created_at 	INTEGER
+);
+'''
 QUERY_CREATE_USER_TABLE = '''
 create table if not exists USERS (
 	username 	TEXT PRIMARY KEY,
@@ -60,12 +65,15 @@ QUERY_SELECT_POST="select post_id, root_id, parent_id, content, username from po
 ## for post versions paged view
 QUERY_COUNT_POST_VERSIONS="select count(post_id) from posts where post_id = ? or source_id = ?"
 QUERY_SELECT_POST_VERSIONS="select post_id, root_id, parent_id, content, username from posts where post_id = ? or source_id = ? order by created_at limit ? offset ?"
+
 ## for user posts paged view
 QUERY_COUNT_USER_POSTS="select count(distinct root_id) from posts where source_id is null and username=?"
 QUERY_SELECT_USER_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null and username=? group by root_id order by root_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+
 ## for posts paged view on front page
 QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
 QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
+
 ## for paged view of single post
 QUERY_SELECT_POST_COMMENTS='''
 select * from(
@@ -75,8 +83,8 @@ union
 select post_id, root_id, parent_id, content, username from posts where root_id=? and source_id is null and post_id = root_id
 '''
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
+
 ## for user comments paged view
-## select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?
 QUERY_SELECT_USER_COMMENTS='''
 select 
 	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, 
@@ -200,21 +208,18 @@ def post_create():
 def post_comment(parent_id):
 	content = request.form.get('content')
 	username = request.cookies.get('auth')
-
-	if len(content) == 0:
-		error = "empty content"
-		return render_template("error.html", error=error)
-	if len(content) > 2000:
-		error = "content too large"
-		return render_template("error.html", error=error)
-
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		## get parent to obtain root_id and parent_id
-		parent = cursor.execute(QUERY_SELECT_POST, (parent_id,)).fetchone()
-		post_id, root_id, _, _, _ = parent
-		comment = cursor.execute(QUERY_COMMENT_POST, (root_id, parent_id, content, username))
-		return redirect(url_for(f'post_smart_view', root_id=root_id))
+		row = cursor.execute(QUERY_SELECT_POST, (parent_id,)).fetchone()
+		parent = Post(*row)
+
+		errors = validate_post_comment(content)
+		if len(errors) != 0: return render_template("errors.html", errors=errors)
+
+		cursor.execute(QUERY_COMMENT_POST, (parent.root_id, parent.parent_id, content, username))
+		lastrowid = cursor.lastrowid
+		return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
 @login_required
@@ -229,11 +234,12 @@ def post_update(post_id):
 		new_content = request.form.get('content')
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
-			post = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
-			post_id, root_id, parent_id, content, username = post
-			cursor.execute(QUERY_ARCHIVE_POST, (content,username,post_id))
-			cursor.execute(QUERY_UPDATE_POST, (new_content,post_id))
-			return redirect(url_for(f'post_smart_view', root_id=root_id))
+			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
+			post = Post(*row)
+			cursor.execute(QUERY_ARCHIVE_POST, (post.content,post.username,post.post_id))
+			cursor.execute(QUERY_UPDATE_POST, (new_content,post.post_id))
+			lastrowid = cursor.lastrowid
+			return redirect(url_for(f'post_smart_view', root_id=post.root_id, _anchor=lastrowid))
 
 @app.route("/post/delete/<int:post_id>", methods=["GET"])
 def post_delete():
