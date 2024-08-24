@@ -3,7 +3,13 @@
     <div class="author" style="color: grey;">by 
         <a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
     </div>
-    <a href="/post/versions/{{post.post_id}}">versions</a>
+    
+    {% if post.source_id is none %}
+    <a href="/post/versions/{{post.post_id}}">versions {{ post.post_id }} </a>
+    {% else %}
+    <a href="/post/versions/{{post.source_id}}">versions {{ post.source_id }} </a>
+    {% endif %}
+
     <a href="#{{post.post_id}}">share</a>
 
     {% if auth is defined and auth == post.username %}
@@ -14,6 +20,6 @@
 {% if auth is defined %}
 <form class="reply" action="/post/{{post.post_id}}/comment" method="post">
 <textarea name="content"></textarea>
-<button type="submit">Create Comment</button>
+<button type="submit">Create Comment ( {{request.path}} )</button>
 </form>
 {% endif %}

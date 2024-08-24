@@ -29,7 +29,7 @@ pragma foreign_keys=on;
 ## [x] when doing paged view for posts - do also join on parent to show parent on page
 ## [x] when showing user posts on paged view - join also root post if comment
 ## [ ] validations (update, create, signin, signup)
-## [ ] load pictures
+## [?] load pictures
 ## [ ] truncate
 ## [ ] implement secure cookies
 ## [ ] change/reset password (with email confirmation?)
@@ -44,6 +44,7 @@ pragma foreign_keys=on;
 ## [ ] add levels on posts ??
 ## [ ] add reportig and banning !!
 ## [ ] tags in a tree
+## [ ] problem - on versions there is option to comment, it shouldnt be there
 ## [ ] TESTS !!!!!
 
 

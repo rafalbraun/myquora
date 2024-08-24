@@ -61,14 +61,14 @@ QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 ## select post queries
 QUERY_SELECT_POST_WITH_COMMENTS='''
 select 
-	post_id, root_id, parent_id, content, username 
+	post_id, root_id, parent_id, content, username, 0, source_id
 from posts 
 where root_id = ? 
 	and source_id is null
 '''
 QUERY_SELECT_POST='''
 select 
-	post_id, root_id, parent_id, content, username 
+	post_id, root_id, parent_id, content, username, 0, source_id
 from posts 
 where post_id = ? 
 	and source_id is null
@@ -84,7 +84,7 @@ where post_id = ?
 '''
 QUERY_SELECT_POST_VERSIONS='''
 select 
-	post_id, root_id, parent_id, content, username 
+	post_id, root_id, parent_id, content, username, 0, source_id
 from posts 
 where post_id = ? 
 	or source_id = ?
@@ -103,7 +103,7 @@ where source_id is null
 '''
 QUERY_SELECT_USER_POSTS='''
 select 
-	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1, t2.source_id 
 from (
 		select 
 			root_id, count(post_id) as comment_count 
@@ -115,20 +115,20 @@ from (
 	) t1 
 left join (
 		select 
-			post_id, root_id, parent_id, content, username 
+			post_id, root_id, parent_id, content, username, source_id 
 		from posts
 	) t2 
 on t1.root_id = t2.post_id
 '''
 
 ## for posts paged view on front page
-QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1 from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username from posts) t2 on t1.root_id = t2.post_id"
+QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1, t2.source_id from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username, source_id from posts) t2 on t1.root_id = t2.post_id"
 QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 
 ## for paged view of single post
 QUERY_SELECT_POST_COMMENTS='''
 select * from(
-select post_id, root_id, parent_id, content, username from posts where root_id=? and source_id is null and post_id <> root_id limit ? offset ?
+select post_id, root_id, parent_id, content, username, 0, source_id from posts where root_id=? and source_id is null and post_id <> root_id limit ? offset ?
 )
 union 
 select post_id, root_id, parent_id, content, username from posts where root_id=? and source_id is null and post_id = root_id
@@ -138,12 +138,12 @@ QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
 ## for user comments paged view
 QUERY_SELECT_USER_COMMENTS='''
 select 
-	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, 
-	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username 
+	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, 0, t1.source_id,
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, 0, t2.source_id
 from 
-	(select post_id, root_id, parent_id, content, username from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?) t1
+	(select post_id, root_id, parent_id, content, username, source_id from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?) t1
 left join
-	(select post_id, root_id, parent_id, content, username from posts) t2
+	(select post_id, root_id, parent_id, content, username from, source_id posts) t2
 on t1.root_id = t2.post_id
 '''
 QUERY_COUNT_USER_COMMENTS="select count(post_id) from posts where username=? and source_id is null and root_id <> post_id"
@@ -286,10 +286,10 @@ def post_update(post_id):
 			return render_template("post_update.html", post=post)
 	if request.method == 'POST':
 		new_content = request.form.get('content')
-		
+
 		errors = validate_post_update(new_content)
 		if len(errors) != 0: return render_template("errors.html", errors=errors)
-		
+
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()
 			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
@@ -351,10 +351,11 @@ def signout():
 	return resp
 
 class Post:
-	def __init__(self, post_id, root_id, parent_id, content, username, comment_count=0):
+	def __init__(self, post_id, root_id, parent_id, content, username, comment_count=0, source_id=0):
 		self.post_id = post_id
 		self.root_id = root_id
 		self.parent_id = parent_id
+		self.source_id = source_id
 		self.content = content
 		self.replies = []
 		self.username = username
@@ -376,12 +377,12 @@ class Post:
 def build_post_hierarchy(tuples):
 	posts = {}
 
-	for post_id, root_id, parent_id, content, username in tuples:
-		posts[post_id] = Post(post_id, root_id, parent_id, content, username)
+	for post_id, root_id, parent_id, content, username, comment_count, source_id in tuples:
+		posts[post_id] = Post(post_id, root_id, parent_id, content, username, comment_count, source_id)
 
 	root_posts = []
 
-	for post_id, root_id, parent_id, content, username in tuples:
+	for post_id, root_id, parent_id, content, username, comment_count, source_id in tuples:
 		if post_id == root_id == parent_id:
 			root_posts.append(posts[post_id])
 		else:
@@ -392,9 +393,9 @@ def build_post_hierarchy(tuples):
 def build_post_parents(tuples):
 	posts = []
 
-	for post_id, root_id, parent_id, content, username, parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username in tuples:
-		parent = Post(parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username)
-		reply = Post(post_id, root_id, parent_id, content, username)
+	for post_id, root_id, parent_id, content, username, comment_count, source_id, parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username, parent_comment_count, parent_source_id in tuples:
+		parent = Post(parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username, parent_comment_count, parent_source_id)
+		reply = Post(post_id, root_id, parent_id, content, username, comment_count, source_id)
 		parent.add_reply(reply)
 		posts.append(parent)
 

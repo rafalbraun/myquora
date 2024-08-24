@@ -3,9 +3,12 @@
 
 <h4>VERSIONS</h4>
 <hr>
+<!--
+to not make unnecessary just_post_no_comment.html only for versions view I just never give auth arg further - comment field will never be available
+-->
 
 	{% for post in posts %}
-		{% with post=post, auth=request.cookies.get('auth') %}
+		{% with post=post %}
 		    {% include "just_post.html" %}
 		{% endwith %}
 		<hr>

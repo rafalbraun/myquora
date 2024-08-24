@@ -24,6 +24,7 @@ def validate_user_signup(username, password):
 ## 1. check if content not too large
 ## 2. check if content not empty
 ## 3. check if user can post (?)
+## 4. make always sure that we are not commenting on archived post
 def validate_post_create(content):
 	errors = []
 	if len(content) == 0:
@@ -50,6 +51,7 @@ def validate_post_update(content):
 ## 4. check if parent exists - assume parent is correct
 ## 5. sanitize/escape content from dangerous chars (?)
 ## 6. check if user can post (?)
+## 7. make always sure that we are not commenting on archived post
 def validate_post_comment(content):
 	errors = []
 	if len(content) == 0:
