@@ -10,13 +10,17 @@
 		<hr>
 	{% endfor %}
 	
-	page: {{ pagenum }}/{{ page_count }}<br>
-    {% for page in page_range %}
-    	{% if page == pagenum %}
-        <a href="/posts?page={{page}}">[ {{page}} ]</a>
-    	{% else %}
-        <a href="/posts?page={{page}}">{{page}}</a>
-    	{% endif %}
-    {% endfor %}
+	{% if page_count == 0 %}
+		no posts yet
+	{% else %}
+		page: {{ pagenum }}/{{ page_count }}<br>
+	    {% for page in page_range %}
+	    	{% if page == pagenum %}
+	        <a href="/posts?page={{page}}">[ {{page}} ]</a>
+	    	{% else %}
+	        <a href="/posts?page={{page}}">{{page}}</a>
+	    	{% endif %}
+	    {% endfor %}
+    {% endif %}
 
 {% endblock %}

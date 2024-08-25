@@ -1,6 +1,7 @@
 <div class="post" id="{{post.post_id}}">
-    <a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
-    <span class="author" style="color: grey;"> posted on {{post.created_at}}
+    <span>
+        <a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
+        <span class="author" style="color: grey;"> posted on {{post.created_at}}</span>
     </span>
     <div class="preformatted">{{ post.content }}</div>
     <div class="container" style="display: flex; justify-content: space-between">

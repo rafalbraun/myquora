@@ -13,13 +13,17 @@
 		<hr>
 	{% endfor %}
 
-	page: {{ pagenum }}/{{ page_count }}<br>
-    {% for page in page_range %}
-    	{% if page == pagenum %}
-        <a href="/user/posts/{{username}}?page={{page}}">[ {{page}} ]</a>
-    	{% else %}
-        <a href="/user/posts/{{username}}?page={{page}}">{{page}}</a>
-    	{% endif %}
-    {% endfor %}
+	{% if page_count == 0 %}
+		this user has not posted anything
+	{% else %}
+		page: {{ pagenum }}/{{ page_count }}<br>
+	    {% for page in page_range %}
+	    	{% if page == pagenum %}
+	        <a href="/user/posts/{{username}}?page={{page}}">[ {{page}} ]</a>
+	    	{% else %}
+	        <a href="/user/posts/{{username}}?page={{page}}">{{page}}</a>
+	    	{% endif %}
+	    {% endfor %}
+	{% endif %}
 
 {% endblock %}

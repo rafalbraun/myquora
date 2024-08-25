@@ -6,7 +6,7 @@ QUERY_SELECT_USERNAME="select username, password from users where username = ?"
 
 def validate_user_signup(username, password):
 	errors = []
-	if len(username) <= 10:
+	if len(username) <= 5:
 		errors.append("username too short")
 	if len(username) > 30:
 		errors.append("username too long")
@@ -35,7 +35,7 @@ def validate_post_create(content):
 
 ## 1. check if content not too large
 ## 2. check if content not empty
-## 3. check if user can post (?)
+## 3. check if user can update (is owner or admin) (?)
 ## 4. check if original post exists
 def validate_post_update(content):
 	errors = []

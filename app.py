@@ -11,7 +11,7 @@ from validations import *
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'  # Needed for securely signing the session cookie
 dbname = "posts.db"
-page_size = 5
+page_size = 20
 
 QUERY_CREATE_SESSIONS_TABLE = '''
 create table if not exists SESSIONS (
@@ -53,7 +53,7 @@ QUERY_SELECT_USER="select username, password from users where username = ?"
 ## update/insert post queries
 QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username) values(?,?,?,?)"
 QUERY_ARCHIVE_POST="insert into posts(content, username, source_id) values(?,?,?)"
-QUERY_CREATE_POST="insert into posts(content, username, created_at) values(?,?,date())"
+QUERY_CREATE_POST="insert into posts(content, username, created_at) values(?,?,datetime())"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
@@ -122,7 +122,7 @@ on t1.root_id = t2.post_id
 '''
 
 ## for posts paged view on front page
-QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, t1.comment_count-1 as comment_count, t2.source_id from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username, created_at, source_id from posts) t2 on t1.root_id = t2.post_id"
+QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, t1.comment_count-1 as comment_count, t2.source_id from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by created_at asc limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username, created_at, source_id from posts) t2 on t1.root_id = t2.post_id"
 QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 
 ## for paged view of single post
@@ -363,9 +363,9 @@ class Post:
 		self.parent_id = parent_id
 		self.source_id = source_id
 		self.content = content
-		self.replies = []
 		self.username = username
 		self.comment_count = comment_count
+		self.replies = []
 
 	def add_reply(self, comment):
 		self.replies.append(comment)
