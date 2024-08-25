@@ -53,7 +53,7 @@ QUERY_SELECT_USER="select username, password from users where username = ?"
 ## update/insert post queries
 QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username) values(?,?,?,?)"
 QUERY_ARCHIVE_POST="insert into posts(content, username, source_id) values(?,?,?)"
-QUERY_CREATE_POST="insert into posts(content, username) values(?,?)"
+QUERY_CREATE_POST="insert into posts(content, username, created_at) values(?,?,date())"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
@@ -61,14 +61,14 @@ QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 ## select post queries
 QUERY_SELECT_POST_WITH_COMMENTS='''
 select 
-	post_id, root_id, parent_id, content, username, 0, source_id
-from posts 
+	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, t1.created_at, (select count(post_id)-1 from posts where root_id=t1.post_id) as comment_count, source_id
+from posts t1
 where root_id = ? 
 	and source_id is null
 '''
 QUERY_SELECT_POST='''
 select 
-	post_id, root_id, parent_id, content, username, 0, source_id
+	post_id, root_id, parent_id, content, username, created_at, 0, source_id
 from posts 
 where post_id = ? 
 	and source_id is null
@@ -84,7 +84,7 @@ where post_id = ?
 '''
 QUERY_SELECT_POST_VERSIONS='''
 select 
-	post_id, root_id, parent_id, content, username, 0, source_id
+	post_id, root_id, parent_id, content, username, created_at, 0, source_id
 from posts 
 where post_id = ? 
 	or source_id = ?
@@ -103,7 +103,7 @@ where source_id is null
 '''
 QUERY_SELECT_USER_POSTS='''
 select 
-	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1, t2.source_id 
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, t1.comment_count-1, t2.source_id 
 from (
 		select 
 			root_id, count(post_id) as comment_count 
@@ -115,35 +115,35 @@ from (
 	) t1 
 left join (
 		select 
-			post_id, root_id, parent_id, content, username, source_id 
+			post_id, root_id, parent_id, content, username, created_at, source_id 
 		from posts
 	) t2 
 on t1.root_id = t2.post_id
 '''
 
 ## for posts paged view on front page
-QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t1.comment_count-1, t2.source_id from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username, source_id from posts) t2 on t1.root_id = t2.post_id"
+QUERY_SELECT_POSTS="select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, t1.comment_count-1 as comment_count, t2.source_id from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by post_id limit ? offset ?) t1 left join (select post_id, root_id, parent_id, content, username, created_at, source_id from posts) t2 on t1.root_id = t2.post_id"
 QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
 
 ## for paged view of single post
 QUERY_SELECT_POST_COMMENTS='''
 select * from(
-select post_id, root_id, parent_id, content, username, 0, source_id from posts where root_id=? and source_id is null and post_id <> root_id limit ? offset ?
+select t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, t1.created_at, (select count(post_id)-1 from posts where root_id=t1.post_id) as comment_count, t1.source_id from posts t1 where root_id=? and source_id is null and post_id <> root_id limit ? offset ?
 )
 union 
-select post_id, root_id, parent_id, content, username, 0, source_id from posts where root_id=? and source_id is null and post_id = root_id
+select t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, (select count(post_id)-1 from posts where root_id=t2.post_id) as comment_count, t2.source_id from posts t2 where root_id=? and source_id is null and post_id = root_id
 '''
 QUERY_COUNT_POST_COMMENTS="select count(root_id)-1 from posts where root_id=?"
 
 ## for user comments paged view
 QUERY_SELECT_USER_COMMENTS='''
 select 
-	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, 0, t1.source_id,
-	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, 0, t2.source_id
+	t1.post_id, t1.root_id, t1.parent_id, t1.content, t1.username, t1.created_at, 0, t1.source_id,
+	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, 0, t2.source_id
 from 
-	(select post_id, root_id, parent_id, content, username, source_id from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?) t1
+	(select post_id, root_id, parent_id, content, username, created_at, source_id from posts where username=? and source_id is null and root_id <> post_id order by created_at limit ? offset ?) t1
 left join
-	(select post_id, root_id, parent_id, content, username, source_id from posts) t2
+	(select post_id, root_id, parent_id, content, username, created_at, source_id from posts) t2
 on t1.root_id = t2.post_id
 '''
 QUERY_COUNT_USER_COMMENTS="select count(post_id) from posts where username=? and source_id is null and root_id <> post_id"
@@ -261,6 +261,7 @@ def post_create():
 @app.route("/post/<int:parent_id>/comment", methods=["POST"])
 @login_required
 def post_comment(parent_id):
+	view = request.form.get('view')
 	content = request.form.get('content')
 	username = request.cookies.get('auth')
 	with sqlite3.connect(dbname) as conn:
@@ -274,7 +275,10 @@ def post_comment(parent_id):
 
 		cursor.execute(QUERY_COMMENT_POST, (parent.root_id, parent.parent_id, content, username))
 		lastrowid = cursor.lastrowid
-		return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid))
+		
+		if "/post/" in view:
+			return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid))
+		return redirect(url_for(f'post_paged_view', root_id=parent.root_id, _anchor=lastrowid))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
 @login_required
@@ -352,7 +356,8 @@ def signout():
 	return resp
 
 class Post:
-	def __init__(self, post_id, root_id, parent_id, content, username, comment_count=0, source_id=0):
+	def __init__(self, post_id, root_id, parent_id, content, username, created_at, comment_count=0, source_id=0):
+		self.created_at = created_at
 		self.post_id = post_id
 		self.root_id = root_id
 		self.parent_id = parent_id
@@ -378,12 +383,12 @@ class Post:
 def build_post_hierarchy(tuples):
 	posts = {}
 
-	for post_id, root_id, parent_id, content, username, comment_count, source_id in tuples:
-		posts[post_id] = Post(post_id, root_id, parent_id, content, username, comment_count, source_id)
+	for post_id, root_id, parent_id, content, username, created_at, comment_count, source_id in tuples:
+		posts[post_id] = Post(post_id, root_id, parent_id, content, username, created_at, comment_count, source_id)
 
 	root_posts = []
 
-	for post_id, root_id, parent_id, content, username, comment_count, source_id in tuples:
+	for post_id, root_id, parent_id, content, username, created_at, comment_count, source_id in tuples:
 		if post_id == root_id == parent_id:
 			root_posts.append(posts[post_id])
 		else:
@@ -394,9 +399,9 @@ def build_post_hierarchy(tuples):
 def build_post_parents(tuples):
 	posts = []
 
-	for post_id, root_id, parent_id, content, username, comment_count, source_id, parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username, parent_comment_count, parent_source_id in tuples:
-		parent = Post(parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username, parent_comment_count, parent_source_id)
-		reply = Post(post_id, root_id, parent_id, content, username, comment_count, source_id)
+	for post_id, root_id, parent_id, content, username, created_at, comment_count, source_id, parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username, parent_created_at, parent_comment_count, parent_source_id in tuples:
+		parent = Post(parent_post_id, parent_root_id, parent_parent_id, parent_content, parent_username, parent_created_at, parent_comment_count, parent_source_id)
+		reply = Post(post_id, root_id, parent_id, content, username, created_at, comment_count, source_id)
 		parent.add_reply(reply)
 		posts.append(parent)
 
