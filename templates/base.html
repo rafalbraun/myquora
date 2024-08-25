@@ -17,6 +17,7 @@
     		{% set auth = request.cookies.get('auth') %}    		
 		    {% if auth %}
 		    	<a href="/user/posts/{{ auth }}">{{ auth }}</a>
+		    	<a href="/user/notifications/{{ auth }}">notifications [{{ userinfo.notifications_count }}]</a>
 		        <a href="{{ url_for('signout') }}">Sign Out</a>
 		    {% else %}
 		        <a href="{{ url_for('signup') }}">Sign Up</a>

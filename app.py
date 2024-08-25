@@ -13,6 +13,15 @@ app.secret_key = 'your_secret_key'  # Needed for securely signing the session co
 dbname = "posts.db"
 page_size = 20
 
+QUERY_CREATE_NOTIFICATIONS_TABLE = '''
+create table if not exists NOTIFICATIONS (
+	post_id 	TEXT,
+	username 	TEXT,
+	PRIMARY KEY(post_id, username),
+	FOREIGN KEY(post_id) 	REFERENCES POSTS(post_id),
+	FOREIGN KEY(username) 	REFERENCES USERS(username)	
+);
+'''
 QUERY_CREATE_SESSIONS_TABLE = '''
 create table if not exists SESSIONS (
 	session_id 	TEXT PRIMARY KEY
@@ -49,9 +58,10 @@ create table if not exists POSTS (
 ## select user queries
 QUERY_CREATE_USER="insert into users(username, password) values(?,?)"
 QUERY_SELECT_USER="select username, password from users where username = ?"
+QUERY_SELECT_USER_WITH_NOTIFICATIONS="select username, (select count(post_id) from notifications where username=u1.username) from users u1 where username = ?"
 
 ## update/insert post queries
-QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username) values(?,?,?,?)"
+QUERY_COMMENT_POST="insert into posts(root_id, parent_id, content, username, created_at) values(?,?,?,?,datetime())"
 QUERY_ARCHIVE_POST="insert into posts(content, username, source_id) values(?,?,?)"
 QUERY_CREATE_POST="insert into posts(content, username, created_at) values(?,?,datetime())"
 QUERY_UPDATE_POST="update posts set content=? where post_id=?"
@@ -179,7 +189,7 @@ def post_smart_view(root_id):
 		result = build_post_hierarchy(rows)
 		if len(result) != 1:
 			return render_template("consistency_error.html", post_id=root_id)			
-		return render_template("post.html", post=result[0], comment_count=len(rows)-1)
+		return render_template("post.html", post=result[0], comment_count=len(rows)-1, userinfo=get_userinfo(request))
 
 @app.route("/posts", methods=["GET"])
 def posts():
@@ -190,7 +200,7 @@ def posts():
 		count = cursor.execute(QUERY_COUNT_POSTS).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_POSTS, (page_size,offset)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
-		return render_template("posts.html", posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
+		return render_template("posts.html", posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
 
 @app.route("/post_paged/<int:root_id>", methods=["GET"])
 def post_paged_view(root_id):
@@ -202,7 +212,7 @@ def post_paged_view(root_id):
 		offset = (pagenum-1) * page_size
 		rows = cursor.execute(QUERY_SELECT_POST_COMMENTS, (root_id,page_size,offset,root_id)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
-		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
+		return render_template("post_paged.html", root_id=root_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
 
 @app.route("/post/versions/<int:post_id>", methods=["GET"])
 def post_versions(post_id):
@@ -213,7 +223,7 @@ def post_versions(post_id):
 		count = cursor.execute(QUERY_COUNT_POST_VERSIONS, (post_id,post_id)).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_POST_VERSIONS, (post_id,post_id,page_size,offset)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
-		return render_template("versions.html", post_id=post_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
+		return render_template("versions.html", post_id=post_id, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
 
 @app.route("/user/posts/<string:username>", methods=["GET"])
 def user_posts(username):
@@ -224,7 +234,7 @@ def user_posts(username):
 		count = cursor.execute(QUERY_COUNT_USER_POSTS, (username,)).fetchone()[0]
 		rows = cursor.execute(QUERY_SELECT_USER_POSTS, (username,page_size,offset)).fetchall()
 		posts, page_count, page_range = pagination(count, rows)
-		return render_template("user_posts.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
+		return render_template("user_posts.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
 
 @app.route("/user/comments/<string:username>", methods=["GET"])
 def user_comments(username):
@@ -237,13 +247,13 @@ def user_comments(username):
 		posts = build_post_parents(rows)
 		roots = [(post.post_id, post.root_id, post.parent_id, post.content, post.username, post.comment_count, post.source_id) for post in posts]
 		_, page_count, page_range = pagination(count, roots)
-		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range)
+		return render_template("user_comments.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
 
 @app.route("/post/create", methods=["GET","POST"])
 @login_required
 def post_create():
 	if request.method == 'GET':
-		return render_template("post_create.html")
+		return render_template("post_create.html", userinfo=get_userinfo(request))
 	if request.method == 'POST':
 		content = request.form.get('content')
 		username = request.cookies.get('auth')
@@ -288,7 +298,7 @@ def post_update(post_id):
 			cursor = conn.cursor()
 			row = cursor.execute(QUERY_SELECT_POST, (post_id,)).fetchone()
 			post = Post(*row) 
-			return render_template("post_update.html", post=post)
+			return render_template("post_update.html", post=post, userinfo=get_userinfo(request))
 	if request.method == 'POST':
 		new_content = request.form.get('content')
 
@@ -308,6 +318,22 @@ def post_update(post_id):
 @login_required
 def post_delete():
 	pass
+
+def get_userinfo(request):
+	username = request.cookies.get('auth')
+	if username is None:
+		return None
+	else:
+		with sqlite3.connect(dbname) as conn:
+			cursor = conn.cursor()
+			row = cursor.execute(QUERY_SELECT_USER_WITH_NOTIFICATIONS, (username,)).fetchone()
+			userinfo = UserInfo(*row)
+			return userinfo
+
+@app.route("/user/notifications/<string:username>", methods=["GET"])
+@login_required
+def user_nofitications(username):
+	return render_template("user_notifications.html", userinfo=get_userinfo(request))
 
 @app.route("/signup", methods=["GET","POST"])
 def signup():
@@ -354,6 +380,11 @@ def signout():
 	resp = make_response(redirect(url_for('signin')))
 	resp.set_cookie('auth', '', expires=0)
 	return resp
+
+class UserInfo:
+	def __init__(self, username, notifications_count):
+		self.username = username
+		self.notifications_count = notifications_count	
 
 class Post:
 	def __init__(self, post_id, root_id, parent_id, content, username, created_at, comment_count=0, source_id=0):

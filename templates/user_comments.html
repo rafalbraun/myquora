@@ -12,7 +12,7 @@
 	    	<a href="/post_paged/{{post.post_id}}">paged_view [ {{post.comment_count}} ]</a>
 		{% endwith %}
 		</div>
-
+		<hr>
 		<div class="replies" style="margin-left: 50px">
 		{% if (post.replies is defined) and post.replies %}
 		    {% for comment in post.replies %}
@@ -22,8 +22,6 @@
 		    {% endfor %}
 		{% endif %}
 		</div>
-
-		<hr>
 	{% endfor %}
 
 	{% if page_count == 0 %}
