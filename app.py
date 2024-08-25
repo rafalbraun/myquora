@@ -68,6 +68,14 @@ QUERY_UPDATE_POST="update posts set content=? where post_id=?"
 QUERY_DELETE_POST="update posts set deleted_at=?, deleted_by=? where post_id=?"
 QUERY_AFTER_CREATE="update posts set parent_id=?, root_id=? where post_id=?"
 
+QUERY_COUNT_USER_NOTIFICATIONS="select COUNT(*) FROM notifications where username=?"
+QUERY_SELECT_USER_NOTIFICATIONS='''
+select p1.post_id, p1.root_id, p1.parent_id, "", p1.username, p1.created_at, 0, p1.source_id from notifications n1
+left join posts p1
+on p1.post_id = n1.post_id
+where n1.username=? limit ? offset ?
+'''
+
 ## select post queries
 QUERY_SELECT_POST_WITH_COMMENTS='''
 select 
@@ -333,7 +341,14 @@ def get_userinfo(request):
 @app.route("/user/notifications/<string:username>", methods=["GET"])
 @login_required
 def user_nofitications(username):
-	return render_template("user_notifications.html", userinfo=get_userinfo(request))
+	pagenum = request.args.get('page', default=1, type=int)
+	offset = (pagenum-1) * page_size
+	with sqlite3.connect(dbname) as conn:
+		cursor = conn.cursor()
+		count = cursor.execute(QUERY_COUNT_USER_NOTIFICATIONS, (username,)).fetchone()[0]
+		rows = cursor.execute(QUERY_SELECT_USER_NOTIFICATIONS, (username,page_size,offset)).fetchall()
+		posts, page_count, page_range = pagination(count, rows)
+		return render_template("user_notifications.html", username=username, posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
 
 @app.route("/signup", methods=["GET","POST"])
 def signup():

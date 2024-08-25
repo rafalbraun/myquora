@@ -102,3 +102,14 @@ from
 left join
 	(select post_id, root_id, parent_id, content, username from, source_id posts) t2
 on t1.root_id = t2.post_id
+
+
+select p1.post_id, p1.root_id, p1.parent_id, "", p1.username, p1.created_at, 0, p1.source_id from notifications n1
+left join posts p1
+on p1.post_id = n1.post_id
+where n1.username="admin";
+
+
+select COUNT(*) FROM notifications where username="admin";
+
+
