@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 
-	{{ userinfo.username }}
-	{{ userinfo.notifications_count }}
+	user: {{ userinfo.username }}, notifications: {{ userinfo.notifications_count }}
 
 	<hr>
 
 	{% for post in posts %}
-		==== {{ post.post_id }}
+		notification about <a href="/post/{{post.root_id}}#{{post.post_id}}">post {{post.root_id}} / {{post.post_id}}</a> from user <a href="/user/{{post.username}}">{{ post.username }}</a>
 		<hr>
 	{% endfor %}
 
 	{% if page_count == 0 %}
-		this user has not posted anything
+		no notifications
 	{% else %}
 		page: {{ pagenum }}/{{ page_count }}<br>
 	    {% for page in page_range %}

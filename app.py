@@ -5,6 +5,7 @@ from pprint import pprint
 import sqlite3
 import json
 import math
+from sqlite3 import Error
 
 from validations import *
 
@@ -203,12 +204,16 @@ def post_smart_view(root_id):
 def posts():
 	pagenum = request.args.get('page', default=1, type=int)
 	offset = (pagenum-1) * page_size
-	with sqlite3.connect(dbname) as conn:
-		cursor = conn.cursor()
-		count = cursor.execute(QUERY_COUNT_POSTS).fetchone()[0]
-		rows = cursor.execute(QUERY_SELECT_POSTS, (page_size,offset)).fetchall()
-		posts, page_count, page_range = pagination(count, rows)
-		return render_template("posts.html", posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
+	try:
+		with sqlite3.connect(dbname) as conn:
+			cursor = conn.cursor()
+			count = cursor.execute(QUERY_COUNT_POSTS).fetchone()[0]
+			rows = cursor.execute(QUERY_SELECT_POSTS, (page_size,offset)).fetchall()
+			posts, page_count, page_range = pagination(count, rows)
+			return render_template("posts.html", posts=posts, page_count=page_count, pagenum=pagenum, page_range=page_range, userinfo=get_userinfo(request))
+	except Error as e:
+		# Handle database connection errors
+		return render_template("errors.html", errors=[e])
 
 @app.route("/post_paged/<int:root_id>", methods=["GET"])
 def post_paged_view(root_id):
@@ -282,6 +287,7 @@ def post_comment(parent_id):
 	view = request.form.get('view')
 	content = request.form.get('content')
 	username = request.cookies.get('auth')
+	print(parent_id)
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		## get parent to obtain root_id and parent_id
@@ -291,12 +297,10 @@ def post_comment(parent_id):
 		errors = validate_post_comment(content)
 		if len(errors) != 0: return render_template("errors.html", errors=errors)
 
-		cursor.execute(QUERY_COMMENT_POST, (parent.root_id, parent.parent_id, content, username))
+		cursor.execute(QUERY_COMMENT_POST, (parent.root_id, parent.post_id, content, username))
 		lastrowid = cursor.lastrowid
 		
-		if "/post/" in view:
-			return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid))
-		return redirect(url_for(f'post_paged_view', root_id=parent.root_id, _anchor=lastrowid))
+		return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
 @login_required

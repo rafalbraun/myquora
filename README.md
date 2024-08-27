@@ -1,3 +1,9 @@
+#########################
+## delete
+delete from notifications;
+delete from posts;
+#########################
+
 insert into posts(root_id, parent_id, post_id, content) values(1, 1, 1, "This is post");
 insert into posts(root_id, parent_id, post_id, content) values(1, 1, 2, "This is the first comment");
 insert into posts(root_id, parent_id, post_id, content) values(1, 2, 3, "This is a reply to the first comment");
@@ -30,9 +36,11 @@ pragma foreign_keys=on;
 ## [x] when showing user posts on paged view - join also root post if comment
 ## [x] create comment BUT the user was on a paged view -- problem?
 ## [x] make sure only op can update or delete post
+## [x] problem - on versions there is option to comment, it shouldnt be there
+## [x] on post paged - redirect to last page
 ## [?] suggest paged view but only on root post
-## [ ] validations (update, create, signin, signup)
 ## [?] load pictures
+## [ ] validations (update, create, signin, signup)
 ## [ ] truncate
 ## [ ] implement secure cookies
 ## [ ] change/reset password (with email confirmation?)
@@ -43,9 +51,12 @@ pragma foreign_keys=on;
 ## [ ] on user_posts.html load also comment count on root post
 ## [ ] add levels on posts ??
 ## [ ] add reportig and banning !!
-## [ ] tags in a tree
-## [ ] problem - on versions there is option to comment, it shouldnt be there
-## [ ] on post paged - redirect to last page
+## [ ] tags in a tree?
+## [ ] when updated - the archived post has root_id = null - maybe that is a problem? it is for notifications for sure ... or maybe not?
+## [ ] add 1,2,3,....,98,99,100
+## [ ] blocking user
+## [ ] adding groups, moderators, owners ...
+## [ ] finish notifications
 ## [ ] TESTS !!!!!
 
 
@@ -108,8 +119,4 @@ select p1.post_id, p1.root_id, p1.parent_id, "", p1.username, p1.created_at, 0, 
 left join posts p1
 on p1.post_id = n1.post_id
 where n1.username="admin";
-
-
-select COUNT(*) FROM notifications where username="admin";
-
 
