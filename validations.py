@@ -29,7 +29,7 @@ def validate_post_create(content):
 	errors = []
 	if len(content) == 0:
 		errors.append("empty content")
-	if len(content) > 2000:
+	if len(content) > 5000:
 		errors.append("content too large")
 	return errors
 
@@ -41,7 +41,7 @@ def validate_post_update(content):
 	errors = []
 	if len(content) == 0:
 		errors.append("empty content")
-	if len(content) > 2000:
+	if len(content) > 5000:
 		errors.append("content too large")
 	return errors
 
@@ -56,7 +56,7 @@ def validate_post_comment(content):
 	errors = []
 	if len(content) == 0:
 		errors.append("empty content")
-	if len(content) > 2000:
+	if len(content) > 5000:
 		errors.append("content too large")
 	return errors
 

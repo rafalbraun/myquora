@@ -1,8 +1,12 @@
 <div class="post" id="{{post.post_id}}">
-    <div class="preformatted">{{ post.content }}</div>
-    <div class="author" style="color: grey;">by 
+    <span>
         <a href="/user/posts/{{ post.username }}">{{ post.username }}</a>
+        <span class="author" style="color: grey;"> posted on {{post.created_at}}</span>
+    </span>
+    <div class="preformatted">{{ post.content }}</div>
+    <div class="container" style="display: flex; justify-content: space-between">
+        <span>
+            <a href="#{{post.post_id}}">share</a>
+        </span>
     </div>
-    
-    <a href="#{{post.post_id}}">share</a>
 </div>

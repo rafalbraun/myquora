@@ -10,9 +10,9 @@ from sqlite3 import Error
 from validations import *
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # Needed for securely signing the session cookie
+app.secret_key = 'your_secret_key'
 dbname = "posts.db"
-page_size = 20
+page_size = 10
 
 QUERY_CREATE_NOTIFICATIONS_TABLE = '''
 create table if not exists NOTIFICATIONS (
@@ -184,9 +184,9 @@ def pagination(count, rows):
 	page_range = range(1, page_count+1)
 	return posts, page_count, page_range
 
-@app.route("/index", methods=["GET"])
+@app.route("/", methods=["GET"])
 def index():
-	return render_template("index.html")
+	return render_template("index.html", userinfo=get_userinfo(request))
 
 @app.route("/post/<int:root_id>", methods=["GET"])
 def post_smart_view(root_id):
@@ -287,7 +287,6 @@ def post_comment(parent_id):
 	view = request.form.get('view')
 	content = request.form.get('content')
 	username = request.cookies.get('auth')
-	print(parent_id)
 	with sqlite3.connect(dbname) as conn:
 		cursor = conn.cursor()
 		## get parent to obtain root_id and parent_id
@@ -295,12 +294,12 @@ def post_comment(parent_id):
 		parent = Post(*row)
 
 		errors = validate_post_comment(content)
-		if len(errors) != 0: return render_template("errors.html", errors=errors)
+		if len(errors) != 0: return render_template("errors.html", errors=errors, userinfo=get_userinfo(request))
 
 		cursor.execute(QUERY_COMMENT_POST, (parent.root_id, parent.post_id, content, username))
 		lastrowid = cursor.lastrowid
 		
-		return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid))
+		return redirect(url_for(f'post_smart_view', root_id=parent.root_id, _anchor=lastrowid, userinfo=get_userinfo(request)))
 
 @app.route("/post/update/<int:post_id>", methods=["GET","POST"])
 @login_required
@@ -315,7 +314,7 @@ def post_update(post_id):
 		new_content = request.form.get('content')
 
 		errors = validate_post_update(new_content)
-		if len(errors) != 0: return render_template("errors.html", errors=errors)
+		if len(errors) != 0: return render_template("errors.html", errors=errors, userinfo=get_userinfo(request))
 
 		with sqlite3.connect(dbname) as conn:
 			cursor = conn.cursor()

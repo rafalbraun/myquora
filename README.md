@@ -120,3 +120,15 @@ left join posts p1
 on p1.post_id = n1.post_id
 where n1.username="admin";
 
+
+
+
+Szafa ikea PAX w częściach, rozpakowana. Wymiary 100x60x236 cm, kolor biały. Odbiór tylko osobisty na terenie Włocławka. Cena do negocjacji.
+
+https://www.ikea.com/pl/pl/p/pax-bergsbo-szafa-2-drzwi-bialy-bialy-s49904634/
+
+
+
+
+
+
