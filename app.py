@@ -98,8 +98,7 @@ select
 	(select count(post_id)-1 from posts where root_id=t1.post_id) as comment_count, 
 	source_id
 from posts t1
-where root_id = ? 
-	and source_id is null
+where root_id = ? and source_id is null
 '''
 
 QUERY_SELECT_POST='''
@@ -110,35 +109,39 @@ select
 	content, 
 	username, 
 	created_at, 
-	0, 
+	(select count(post_id)-1 from posts where root_id=p.post_id) as comment_count, 
 	source_id
-from posts 
+from posts p
 where post_id = ? and source_id is null
 '''
 
 ## for post versions paged view
 QUERY_COUNT_POST_VERSIONS='''
-select 
-	count(post_id) 
+select count(post_id) 
 from posts 
 where post_id = ? or source_id = ?
 '''
 
 QUERY_SELECT_POST_VERSIONS='''
 select 
-	post_id, root_id, parent_id, content, username, created_at, 0, source_id
+	post_id, 
+	root_id, 
+	parent_id, 
+	content, 
+	username, 
+	created_at, 
+	0, 
+	source_id
 from posts 
-where post_id = ? 
-	or source_id = ?
+where post_id = ? or source_id = ?
 order by created_at limit ? offset ?
 '''
 
 ## for user posts paged view
 QUERY_COUNT_USER_POSTS='''
-select 
-	count(distinct root_id) 
+select count(distinct root_id) 
 from posts 
-where source_id is null and username=?
+where username=? and source_id is null and post_id=root_id
 '''
 
 QUERY_SELECT_USER_POSTS='''
@@ -152,28 +155,29 @@ select
 	(select count(post_id)-1 from posts where root_id=p1.post_id) as comment_count,
 	source_id
 from posts p1
-where username=? and post_id=root_id
+where username=? and post_id=root_id and source_id is null
 order by root_id limit ? offset ?
 '''
 
 ## for posts paged view on front page
 QUERY_SELECT_POSTS='''
 select 
-	t2.post_id,
-	t2.root_id,
-	t2.parent_id,
-	t2.content,
-	t2.username,
-	t2.created_at,
-	t1.comment_count-1 as comment_count,
-	t2.source_id from (select root_id, count(post_id) as comment_count from posts where source_id is null group by root_id order by created_at asc limit ? offset ?) t1 
-left join (select post_id, root_id, parent_id, content, username, created_at, source_id from posts) t2 
-on t1.root_id = t2.post_id
+	post_id,
+	root_id,
+	parent_id,
+	content,
+	username,
+	created_at,
+	(select count(post_id)-1 from posts where root_id=p.post_id) as comment_count,
+	source_id 
+from posts p
+where source_id is null and post_id=root_id
+order by created_at asc limit ? offset ?
 '''
 
-QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id"
+QUERY_COUNT_POSTS="select count(root_id) from posts where root_id=post_id and source_id is null"
 
-## for paged view of single post
+## for paged view of single post - first select given page of comments and union with main post
 QUERY_SELECT_POST_COMMENTS='''
 select * from(
 	select 
