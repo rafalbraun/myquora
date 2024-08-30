@@ -118,26 +118,22 @@ select
 	count(distinct root_id) 
 from posts 
 where source_id is null 
-	and username=?
+and username=?
 '''
 QUERY_SELECT_USER_POSTS='''
 select 
-	t2.post_id, t2.root_id, t2.parent_id, t2.content, t2.username, t2.created_at, t1.comment_count-1, t2.source_id 
-from (
-		select 
-			root_id, count(post_id) as comment_count 
-		from posts 
-		where source_id is null 
-			and username=? 
-		group by root_id 
-		order by root_id limit ? offset ?
-	) t1 
-left join (
-		select 
-			post_id, root_id, parent_id, content, username, created_at, source_id 
-		from posts
-	) t2 
-on t1.root_id = t2.post_id
+	post_id,
+	root_id,
+	parent_id,
+	content,
+	username,
+	created_at,
+	(select count(post_id)-1 from posts where root_id=p1.post_id) as comment_count,
+	source_id
+from posts p1
+where username=?
+and post_id=root_id
+order by root_id limit ? offset ?
 '''
 
 ## for posts paged view on front page
