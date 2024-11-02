@@ -33,6 +33,4 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.relationship("User", foreign_keys=[created_by_id])
-
-    # Self referential the relationship
-    parent = db.relationship('Post', remote_side=[id], backref=db.backref('children', lazy='noload'))
+    children = []

@@ -1,0 +1,13 @@
+{% with post=post %}
+    {% include "just_post.html" %}
+{% endwith %}
+
+<div class="replies" style="margin-left: 50px">
+{% if (post.children is not none) and post.children %}
+    {% for comment in post.children %}
+        {% with post=comment %}
+            {% include "comments.html" %}
+        {% endwith %}
+    {% endfor %}
+{% endif %}
+</div>

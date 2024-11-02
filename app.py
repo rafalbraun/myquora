@@ -17,6 +17,7 @@ import random
 import os
 import csv
 from flask import jsonify
+from collections import defaultdict
 
 page_size = 20
 
@@ -34,17 +35,37 @@ with app.app_context():
     db.session.add(User(id=1,username="test1", email="test1@gmail.com", password=bcrypt.generate_password_hash("test1").decode('utf-8')))
     db.session.add(User(id=2,username="admin", email="admin@gmail.com", password=bcrypt.generate_password_hash("admin").decode('utf-8')))
     db.session.add(Post(id=1,rid=1,pid=1,content="lorem ipsum", created_by_id=1))
+    db.session.add(Post(id=2,rid=1,pid=1,content="comment 1", created_by_id=2))
+    db.session.add(Post(id=3,rid=1,pid=1,content="comment 2", created_by_id=2))
+    db.session.add(Post(id=4,rid=1,pid=2,content="comment 3", created_by_id=2))
     db.session.commit()
 
 @app.route("/posts")
 def posts():
-    page = db.paginate(db.select(Post).order_by(Post.created_at.asc()), per_page=page_size)
+    page = db.paginate(db.select(Post).where(Post.id==Post.rid).order_by(Post.created_at.asc()), per_page=page_size)
     return render_template("posts.html", pagination=page)
 
 @app.route("/post/<int:id>")
 def post(id):
-    post = db.session.get(Post, int(id))
-    return render_template('post.html', post=post)
+    posts = Post.query.filter_by(rid=id).all()
+    hierarchy = build_post_hierarchy(posts)
+    return render_template('post.html', post=hierarchy[0])
+
+def build_post_hierarchy(posts):
+    post_dict = {post.id: post for post in posts}
+    
+    hierarchy = []
+    
+    for post in posts:
+        post.children = []
+        if post.pid == post.id:
+            hierarchy.append(post)
+        else:
+            parent = post_dict.get(post.pid)
+            if parent:
+                parent.children.append(post)
+
+    return hierarchy
 
 @app.route("/user/<int:id>")
 def user(id):

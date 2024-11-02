@@ -2,10 +2,11 @@
 {% block content %}
     <div class="content-section">
 
-		<p>{{ post.content }}</p>
-
-		<a href="/post_update/{{ post.id }}">update</a><br>
-		<a href="/post_delete/{{ post.id }}">delete</a><br>
+	{% if post is not none %}
+        {% with post=post %}
+            {% include "comments.html" %}
+        {% endwith %}
+	{% endif %}
 
 	</div>
 {% endblock %}
