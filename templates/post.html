@@ -2,6 +2,8 @@
 {% block content %}
     <div class="content-section">
 
+    COMMENTS TOTAL {{post.comments}}
+
 	{% if post is not none %}
         {% with post=post %}
             {% include "comments.html" %}
@@ -17,6 +19,7 @@
             {% endfor %}
         {% endif %}
     {% endwith %}
+
     <form method="POST">
         {{ form.csrf_token }}
         <fieldset class="form-group">

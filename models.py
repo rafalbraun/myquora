@@ -33,7 +33,8 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.relationship("User", foreign_keys=[created_by_id])
-    level = db.Column(db.Integer, nullable=False)
+    level = db.Column(db.Integer, nullable=False,  default=0)
+    comments = db.Column(db.Integer, nullable=False,  default=0)
     children = []
     def __repr__(self):
         return f'<Post id={self.id} pid={self.pid} rid={self.rid}>'
