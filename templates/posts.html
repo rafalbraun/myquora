@@ -18,7 +18,15 @@
 			</tr>
 			{% for post in pagination %}
 			<tr>
-				<td><a href="/post/{{post.id}}">{{ post.display_content }}</a></td>
+				<td>
+					<a href="/post/{{post.id}}">
+						{% if post.deleted_by_id is none %}
+							{{ post.display_content }}
+						{% else %}
+							[post deleted]
+						{% endif %}
+					</a>
+				</td>
 				<td>
 					<a href="/user/{{post.created_by.id}}">{{post.created_by.username}}</a>
 				</td>

@@ -2,24 +2,25 @@
 {% block content %}
     <div class="content-section">
 
-    COMMENTS TOTAL {{post.comments}}
+        COMMENTS TOTAL {{post.comments}}
 
-	{% if post is not none %}
-        {% with post=post %}
-            {% include "comments.html" %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <p>{{message}}</p>
+                {% endfor %}
+            {% endif %}
         {% endwith %}
-	{% endif %}
+
+    	{% if post is not none %}
+            {% with post=post %}
+                {% include "comments.html" %}
+            {% endwith %}
+    	{% endif %}
 
 	</div>
 
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <p>{{message}}</p>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
+    {%if current_user.is_authenticated %}
     <form method="POST">
         {{ form1.csrf_token }}
         <fieldset class="form-group">
@@ -83,5 +84,6 @@
             {{ form2.submit2(class="btn btn-outline-info") }}
         </div>
     </form>
+    {% endif %}
 
 {% endblock %}

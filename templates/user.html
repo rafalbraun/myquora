@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="content-section">
+	    {% with messages = get_flashed_messages() %}
+	        {% if messages %}
+	            {% for message in messages %}
+	                <p>{{message}}</p>
+	            {% endfor %}
+	        {% endif %}
+	    {% endwith %}
+
+	    TOTAL {{pagination.total}}
+	    USER {{user.username}}
+
+		<table>
+			<tr>
+				<th>content</th>
+				<th>author</th>
+			</tr>
+			{% for post in pagination %}
+			<tr>
+				<td><a href="/post/{{post.id}}">{{ post.display_content }}</a></td>
+				<td>
+					<a href="/user/{{post.created_by.id}}">{{post.created_by.username}}</a>
+				</td>
+			</tr>
+			{% endfor %}
+		</table>
+	</div>
+	<div class="pagination" style="font-size: 1.125rem; padding: .5rem .75rem; border: 1px solid #dddddd; margin-top: 1rem;">
+	{% for page in pagination.iter_pages() %}
+		{% if page %}
+			{% if page != pagination.page %}
+				<a href="{{ url_for('books', page=page) }}">{{ page }}</a>
+			{% else %}
+				<strong>{{ page }}</strong>
+			{% endif %}
+		{% else %}
+			<span class=ellipsis>…</span>
+		{% endif %}
+	{% endfor %}
+	</div>
+{% endblock %}

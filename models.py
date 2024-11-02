@@ -30,10 +30,13 @@ class Post(db.Model):
     content = db.Column(db.UnicodeText, nullable=True, default='')
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     updated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    deleted_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    deleted_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.relationship("User", foreign_keys=[created_by_id])
     updated_by = db.relationship("User", foreign_keys=[updated_by_id])
+    deleted_by = db.relationship("User", foreign_keys=[deleted_by_id])
     level = db.Column(db.Integer, nullable=False,  default=0)
     comments = db.Column(db.Integer, nullable=False,  default=0)
     children = []

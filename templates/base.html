@@ -11,8 +11,17 @@
 <header>
     <div class="container" style="display: flex; justify-content: space-between">
     	<div class="left">
-    	<a href="/posts">Posts</a>
-    	<a href="/post_create">Create Post</a>
+	    	<a href="/posts">Posts</a>
+	    	<a href="/post_create">Create Post</a>
+	    </div>
+    	<div class="right">
+			{% if current_user.is_authenticated %}
+			<a href="/user/{{current_user.id}}">{{current_user.username}}</a>
+			<a href="/logout">Logout</a>
+			{% else %}
+			<a href="/login">Login</a>
+			{% endif %}
+	    </div>
     </div>
 </header>
 <main>

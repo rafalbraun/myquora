@@ -1,7 +1,9 @@
 <div class="post" id="{{post.id}}">
 
-    <p>{{ post.content }}</p>
+    <p>{% if post.deleted_by_id is none %}{{ post.content }}{% else %}[post deleted]{% endif %}</p>
+    {%if current_user.id == post.created_by_id and post.deleted_by_id is none %}
     <a href="/post_update/{{ post.id }}">update</a><br>
     <a href="/post_delete/{{ post.id }}">delete</a><br>
+    {%endif%}
 
 </div>
