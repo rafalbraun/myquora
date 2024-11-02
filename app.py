@@ -1,12 +1,12 @@
-from flask import Flask, render_template, url_for, flash, redirect, request, make_response
+from flask import Flask, render_template, url_for, flash, redirect, request, make_response, jsonify, abort
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
-from models import db, bcrypt, User, Post
-from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm
+from models import db, bcrypt, User, Post, Report
+from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm, ReportPostForm
 from functools import wraps
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -16,7 +16,6 @@ import math
 import random
 import os
 import csv
-from flask import jsonify
 from collections import defaultdict
 from myutils import build_post_hierarchy, truncate_text_by_word
 
@@ -50,14 +49,19 @@ def posts():
 
 @app.route("/post/<int:id>", methods=['GET', 'POST'])
 def post(id):
-    ## check if not empty
     posts = Post.query.filter_by(rid=id).all()
+    if not posts:
+        abort(404)
+
     hierarchy = build_post_hierarchy(posts)
     root=hierarchy[0]
-    form = CreateCommentForm()
-    if form.validate_on_submit():
+
+    form1 = CreateCommentForm()
+    form2 = ReportPostForm()
+
+    if form1.submit1.data and form1.validate_on_submit():
         post = Post()
-        form.populate_obj(post)
+        form1.populate_obj(post)
         post.created_by_id=1
         post.level = root.level+1
         root.comments = root.comments+1
@@ -65,7 +69,18 @@ def post(id):
         db.session.commit()
         flash(f'Comment has been added.', 'success')
         return redirect(url_for('post', id=post.rid))
-    return render_template('post.html', post=root, form=form, id=root.id)
+
+    elif form2.submit2.data and form2.validate_on_submit():
+        report = Report()
+        report.reason = form2.reason.data
+        report.reported_post = form2.reported_post.data
+        report.created_by_id = 1
+        db.session.add(report)
+        db.session.commit()
+        flash(f'Post has been reported.', 'success')
+        return redirect(url_for('post', id=root.id))
+
+    return render_template('post.html', post=root, form1=form1, form2=form2, id=root.id)
 
 @app.route("/user/<int:id>")
 def user(id):
@@ -78,7 +93,7 @@ def post_create():
     if form.validate_on_submit():
         post = Post()
         form.populate_obj(post)
-        post.created_by_id=1
+        post.created_by_id = 1
         post.level = 0
         db.session.add(post)
         db.session.flush()
@@ -117,7 +132,17 @@ def post_delete(id):
 @app.route("/post_report/<int:id>", methods=['POST'])
 def post_report(id):
     post = Post.query.get_or_404(int(id))
-    return redirect(url_for('post', id=post.id))
+    form = ReportPostForm()
+    if form.validate_on_submit():
+        report = Report()
+        report.reason = form.reason.data
+        report.reported_post = form.reported_post.data
+        report.created_by_id = 1
+        db.session.add(report)
+        db.session.commit()
+        flash(f'Post has been reported.', 'success')
+        return redirect(url_for('post', id=post.id))
+    return redirect(url_for('post', form=form, id=post.id))
 
 @app.errorhandler(404) 
 def not_found(e): 
