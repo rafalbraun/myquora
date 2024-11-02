@@ -18,6 +18,7 @@ import os
 import csv
 from flask import jsonify
 from collections import defaultdict
+from myutils import build_post_hierarchy, truncate_text_by_word
 
 page_size = 20
 
@@ -34,15 +35,17 @@ with app.app_context():
     db.create_all()
     db.session.add(User(id=1,username="test1", email="test1@gmail.com", password=bcrypt.generate_password_hash("test1").decode('utf-8')))
     db.session.add(User(id=2,username="admin", email="admin@gmail.com", password=bcrypt.generate_password_hash("admin").decode('utf-8')))
-    db.session.add(Post(id=1,rid=1,pid=1,content="lorem ipsum", created_by_id=1))
-    db.session.add(Post(id=2,rid=1,pid=1,content="comment 1", created_by_id=2))
-    db.session.add(Post(id=3,rid=1,pid=1,content="comment 2", created_by_id=2))
-    db.session.add(Post(id=4,rid=1,pid=2,content="comment 3", created_by_id=2))
+    db.session.add(Post(id=1,rid=1,pid=1,level=0,content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et mollis eros, nec commodo metus. Ut ligula orci, elementum sodales neque eget, imperdiet dapibus justo. Nunc consectetur, elit sit amet tempus feugiat, lectus odio rutrum metus, in convallis felis lacus non ipsum. Ut in arcu eu libero fermentum bibendum lobortis vehicula lectus. Vivamus quis ultricies elit. In venenatis ligula enim, vitae interdum leo bibendum nec. Praesent convallis ornare ex, ut tristique quam porta vitae. Sed euismod justo in quam varius rhoncus. Maecenas id sem nec urna mollis aliquet.", created_by_id=1))
+    db.session.add(Post(id=2,rid=1,pid=1,level=1,content="Suspendisse sapien odio, efficitur id rhoncus a, porttitor ut ante. Sed laoreet libero at nulla dictum, ac ultrices nunc commodo. Sed odio libero, accumsan sit amet nunc eu, feugiat dictum neque. Donec iaculis neque imperdiet nulla auctor tristique. Nullam quis lectus imperdiet, cursus elit ac, ultrices arcu. In condimentum elit et ligula euismod dignissim. Vivamus sed dapibus urna.", created_by_id=2))
+    db.session.add(Post(id=3,rid=1,pid=1,level=1,content="Ut id aliquet nibh. In sit amet finibus massa. Aenean imperdiet nisi ut est sagittis vulputate. Duis vestibulum ligula in gravida mattis. Integer gravida tempus vestibulum. Vestibulum placerat pulvinar mi, id dictum quam accumsan id. Suspendisse nec blandit magna. Vivamus ullamcorper, neque mollis rutrum semper, quam justo porta erat, sit amet fermentum libero erat eleifend lorem. Mauris luctus nisl et tortor bibendum, id facilisis arcu auctor. Etiam id euismod massa, et varius ipsum. Nullam sagittis velit at libero feugiat consequat. Donec luctus sapien eu felis pellentesque elementum. Fusce et dolor sed libero tincidunt hendrerit. Donec egestas faucibus justo non consectetur. ", created_by_id=2))
+    db.session.add(Post(id=4,rid=1,pid=2,level=2,content="Integer sagittis dapibus interdum. Donec est ipsum, volutpat a lacinia eu, dictum vitae dui. Morbi massa sapien, sodales quis ex vel, hendrerit commodo sapien. Curabitur finibus enim vitae quam varius sagittis. Sed sagittis convallis tellus quis semper. Aenean elit nulla, mollis quis tempus in, rhoncus suscipit libero. Morbi nec eros bibendum, vulputate risus eget, accumsan purus. In finibus feugiat est ut sagittis. Fusce quis vehicula odio, vel maximus risus. Nam quis convallis arcu, suscipit lobortis risus. In sit amet commodo risus, vitae mattis turpis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Aliquam molestie augue magna, sit amet rhoncus lectus venenatis id. Vestibulum eget tristique ex. ", created_by_id=2))
     db.session.commit()
 
 @app.route("/posts")
 def posts():
     page = db.paginate(db.select(Post).where(Post.id==Post.rid).order_by(Post.created_at.asc()), per_page=page_size)
+    for post in page.items:
+        post.display_content = truncate_text_by_word(post.content, 120)
     return render_template("posts.html", pagination=page)
 
 @app.route("/post/<int:id>", methods=['GET', 'POST'])
@@ -62,22 +65,6 @@ def post(id):
         flash(f'Comment has been added.', 'success')
         return redirect(url_for('post', id=post.rid))
     return render_template('post.html', post=root, form=form, id=root.id)
-
-def build_post_hierarchy(posts):
-    post_dict = {post.id: post for post in posts}
-    
-    hierarchy = []
-    
-    for post in posts:
-        post.children = []
-        if post.pid == post.id:
-            hierarchy.append(post)
-        else:
-            parent = post_dict.get(post.pid)
-            if parent:
-                parent.children.append(post)
-
-    return hierarchy
 
 @app.route("/user/<int:id>")
 def user(id):
