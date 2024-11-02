@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
 from models import db, bcrypt, User, Post
-from forms import CreatePostForm, UpdatePostForm, DeletePostForm
+from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm
 from functools import wraps
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -45,11 +45,23 @@ def posts():
     page = db.paginate(db.select(Post).where(Post.id==Post.rid).order_by(Post.created_at.asc()), per_page=page_size)
     return render_template("posts.html", pagination=page)
 
-@app.route("/post/<int:id>")
+@app.route("/post/<int:id>", methods=['GET', 'POST'])
 def post(id):
+    ## check if not empty
     posts = Post.query.filter_by(rid=id).all()
     hierarchy = build_post_hierarchy(posts)
-    return render_template('post.html', post=hierarchy[0])
+    root=hierarchy[0]
+    form = CreateCommentForm()
+    if form.validate_on_submit():
+        post = Post()
+        form.populate_obj(post)
+        post.created_by_id=1
+        post.level = root.level+1
+        db.session.add(post)
+        db.session.commit()
+        flash(f'Comment has been added.', 'success')
+        return redirect(url_for('post', id=post.rid))
+    return render_template('post.html', post=root, form=form, id=root.id)
 
 def build_post_hierarchy(posts):
     post_dict = {post.id: post for post in posts}
@@ -78,7 +90,13 @@ def post_create():
     if form.validate_on_submit():
         post = Post()
         form.populate_obj(post)
+        post.created_by_id=1
+        post.level = 0
         db.session.add(post)
+        db.session.flush()
+        db.session.refresh(post)
+        post.rid = post.id
+        post.pid = post.id
         db.session.commit()
         flash(f'Post has been added.', 'success')
         return redirect(url_for('post', id=post.id))

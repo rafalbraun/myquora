@@ -25,7 +25,7 @@ class User(db.Model, UserMixin):
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    rid = db.Column(db.Integer, nullable=False)
+    rid = db.Column(db.Integer, nullable=True)
     pid = db.Column(db.Integer, db.ForeignKey('post.id'))
     content = db.Column(db.UnicodeText, nullable=True, default='')
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -33,4 +33,7 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
     created_by = db.relationship("User", foreign_keys=[created_by_id])
+    level = db.Column(db.Integer, nullable=False,  default=0)
     children = []
+    def __repr__(self):
+        return f'<Post id={self.id} pid={self.pid} rid={self.rid}>'
