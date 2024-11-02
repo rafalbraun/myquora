@@ -1,5 +1,15 @@
 <div class="post" id="{{post.id}}">
 
+    <div class="container" style="display: flex; justify-content: space-between">
+        <div class="left">
+            <span>
+                <a href="/user/{{post.created_by_id}}">{{post.created_by.username}}</a> posted on {{post.created_at}}
+            </span>
+        </div>
+        <div class="right">
+        </div>
+    </div>
+
     <p>{% if post.deleted_by_id is none %}{{ post.content }}{% else %}[post deleted]{% endif %}</p>
     {%if current_user.id == post.created_by_id and post.deleted_by_id is none %}
     <a href="/post_update/{{ post.id }}">update</a><br>

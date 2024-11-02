@@ -92,7 +92,7 @@ def post(id):
         db.session.add(post)
         db.session.commit()
         flash(f'Comment has been added.', 'success')
-        return redirect(url_for('post', id=post.rid))
+        return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
 
     elif form2.submit2.data and form2.validate_on_submit():
         ## check if logged in
@@ -135,7 +135,7 @@ def post_create():
         post.pid = post.id
         db.session.commit()
         flash(f'Post has been added.', 'success')
-        return redirect(url_for('post', id=post.id))
+        return redirect(url_for('post', id=post.rid))
     return render_template('post_create.html', form=form)
 
 @app.route("/post_update/<int:id>", methods=['GET', 'POST'])
@@ -153,7 +153,7 @@ def post_update(id):
         ## here update rid and pid
         db.session.commit()
         flash(f'Post has been updated.', 'success')
-        return redirect(url_for('post', id=post.id))
+        return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
     return render_template('post_update.html', form=form)
 
 @app.route("/post_delete/<int:id>", methods=['GET', 'POST'])
@@ -170,24 +170,24 @@ def post_delete(id):
         post.deleted_by_id = current_user.id
         db.session.commit()
         flash(f'Post has been deleted.', 'success')
-        return redirect(url_for('posts'))
+        return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
     return render_template('post_delete.html', form=form)
 
-@app.route("/post_report/<int:id>", methods=['POST'])
-@login_required
-def post_report(id):
-    post = Post.query.get_or_404(int(id))
-    form = ReportPostForm()
-    if form.validate_on_submit():
-        report = Report()
-        report.reason = form.reason.data
-        report.reported_post = form.reported_post.data
-        report.created_by_id = current_user.id
-        db.session.add(report)
-        db.session.commit()
-        flash(f'Post has been reported.', 'success')
-        return redirect(url_for('post', id=post.id))
-    return redirect(url_for('post', form=form, id=post.id))
+# @app.route("/post_report/<int:id>", methods=['POST'])
+# @login_required
+# def post_report(id):
+#     post = Post.query.get_or_404(int(id))
+#     form = ReportPostForm()
+#     if form.validate_on_submit():
+#         report = Report()
+#         report.reason = form.reason.data
+#         report.reported_post = form.reported_post.data
+#         report.created_by_id = current_user.id
+#         db.session.add(report)
+#         db.session.commit()
+#         flash(f'Post has been reported.', 'success')
+#         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
+#     return redirect(url_for('post', form=form, id=post.id))
 
 @app.errorhandler(404) 
 def not_found(e): 
