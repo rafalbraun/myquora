@@ -5,7 +5,7 @@ from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
-from models import db, bcrypt, User, Post, Report
+from models import db, bcrypt, User, Post, Report, Notification
 from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm, ReportPostForm
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
@@ -40,7 +40,7 @@ with app.app_context():
 
 @login_manager.user_loader
 def loader_user(user_id):
-    return User.query.get(user_id)
+    return db.session.get(User, int(user_id))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -87,10 +87,19 @@ def post(id):
         post = Post()
         form1.populate_obj(post)
         post.created_by_id = current_user.id
+
+        ## TODO change root to parent
         post.level = root.level+1
         root.comments = root.comments+1
         db.session.add(post)
+        db.session.flush()
+        db.session.refresh(post)
         db.session.commit()
+
+        notification = Notification(uid=root.created_by_id,pid=post.id)
+        db.session.add(notification)
+        db.session.commit()
+
         flash(f'Comment has been added.', 'success')
         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
 
@@ -173,21 +182,12 @@ def post_delete(id):
         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
     return render_template('post_delete.html', form=form)
 
-# @app.route("/post_report/<int:id>", methods=['POST'])
-# @login_required
-# def post_report(id):
-#     post = Post.query.get_or_404(int(id))
-#     form = ReportPostForm()
-#     if form.validate_on_submit():
-#         report = Report()
-#         report.reason = form.reason.data
-#         report.reported_post = form.reported_post.data
-#         report.created_by_id = current_user.id
-#         db.session.add(report)
-#         db.session.commit()
-#         flash(f'Post has been reported.', 'success')
-#         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
-#     return redirect(url_for('post', form=form, id=post.id))
+@app.route("/notifications/<int:id>")
+def notifications():
+    # page = db.paginate(db.select(Post).where(Post.id==Post.rid).order_by(Post.created_at.asc()), per_page=page_size)
+    # for post in page.items:
+    #     post.display_content = truncate_text_by_word(post.content, 120)
+    return render_template("notifications.html", pagination=page)
 
 @app.errorhandler(404) 
 def not_found(e): 
