@@ -1,5 +1,7 @@
 Quora-like forum
 
+Demo: https://ceratablogger.pythonanywhere.com/posts
+
 Login credentials: [admin/admin] [test1/test1]
 
 Features:

@@ -41,6 +41,10 @@ with app.app_context():
 def loader_user(user_id):
     return db.session.get(User, int(user_id))
 
+@app.route("/", methods=["GET", "POST"])
+def index():
+    return redirect(url_for("posts"))
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated is True:
