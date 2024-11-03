@@ -16,19 +16,14 @@
 				<th>content</th>
 				<th>author</th>
 			</tr>
-			{% for post in pagination %}
+			{% for notification in pagination %}
 			<tr>
 				<td>
-					<a href="/post/{{post.id}}">
-						{% if post.deleted_by_id is none %}
-							{{ post.display_content }}
-						{% else %}
-							[post deleted]
-						{% endif %}
-					</a>
+					User writes to you in your 
+					<a href="/post/{{notification.post.pid}}">post</a>
 				</td>
 				<td>
-					<a href="/user/{{post.created_by.id}}">{{post.created_by.username}}</a>
+					<a href="/post/{{notification.user.uid}}">{{ notification.user.username }}</a>
 				</td>
 			</tr>
 			{% endfor %}
@@ -38,7 +33,7 @@
 	{% for page in pagination.iter_pages() %}
 		{% if page %}
 			{% if page != pagination.page %}
-				<a href="{{ url_for('posts', page=page) }}">{{ page }}</a>
+				<a href="{{ url_for('notifications', page=page) }}">{{ page }}</a>
 			{% else %}
 				<strong>{{ page }}</strong>
 			{% endif %}

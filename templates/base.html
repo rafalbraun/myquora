@@ -16,7 +16,7 @@
 	    </div>
     	<div class="right">
 			{% if current_user.is_authenticated %}
-			<a href="/user/notifications">notifications ({{current_user.notifications|length}})</a>
+			<a href="/notifications">notifications ({{current_user.notifications|length}})</a>
 			<a href="/user/{{current_user.id}}">{{current_user.username}}</a>
 			<a href="/logout">Logout</a>
 			{% else %}

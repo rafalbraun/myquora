@@ -14,6 +14,8 @@ bcrypt = Bcrypt()
 class Notification(db.Model):
     uid = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     pid = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
+    post = db.relationship("Post", foreign_keys=[pid], viewonly=True)
+    user = db.relationship("User", foreign_keys=[uid], viewonly=True)
     __table_args__ = (PrimaryKeyConstraint(uid, pid), {})
 
 class User(db.Model, UserMixin):

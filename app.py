@@ -20,7 +20,6 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
-app.config['SECRET_KEY'] = 'yoursecretkey'
 
 db.init_app(app)
 bcrypt.init_app(app)
@@ -53,7 +52,7 @@ def login():
             login_user(user)
             return redirect(url_for("posts"))
         else:
-            flash(f'wrong credentials or no such user', 'error')
+            flash(f'Wrong credentials or no such user', 'error')
     return render_template("login.html")
 
 @app.route("/logout")
@@ -88,14 +87,15 @@ def post(id):
         form1.populate_obj(post)
         post.created_by_id = current_user.id
 
-        ## TODO change root to parent
-        post.level = root.level+1
+        parent = Post.query.filter_by(id=form1.pid.data).first()
+        post.level = parent.level+1
         root.comments = root.comments+1
         db.session.add(post)
         db.session.flush()
         db.session.refresh(post)
         db.session.commit()
 
+        ## TODO make list of users to notify (now it notifies only author)
         notification = Notification(uid=root.created_by_id,pid=post.id)
         db.session.add(notification)
         db.session.commit()
@@ -182,11 +182,9 @@ def post_delete(id):
         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))
     return render_template('post_delete.html', form=form)
 
-@app.route("/notifications/<int:id>")
+@app.route("/notifications")
 def notifications():
-    # page = db.paginate(db.select(Post).where(Post.id==Post.rid).order_by(Post.created_at.asc()), per_page=page_size)
-    # for post in page.items:
-    #     post.display_content = truncate_text_by_word(post.content, 120)
+    page = db.paginate(db.select(Notification).where(Notification.uid==current_user.id), per_page=50)
     return render_template("notifications.html", pagination=page)
 
 @app.errorhandler(404) 
