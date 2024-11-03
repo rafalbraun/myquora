@@ -2,13 +2,12 @@
 {% block content %}
     <div class="content-section">
 
-        COMMENTS TOTAL {{post.comments}}
-
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
                     <p>{{message}}</p>
                 {% endfor %}
+                <hr>
             {% endif %}
         {% endwith %}
 
@@ -27,10 +26,10 @@
             <legend class="border-bottom mb-4">comment post</legend>
 
             <div class="form-group">
-                {{ form1.rid(class="form-control form-control-lg",value=id,readonly=true) }}
+                {{ form1.rid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
             </div>
             <div class="form-group">
-                {{ form1.pid(class="form-control form-control-lg",value=id,readonly=true) }}
+                {{ form1.pid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
             </div>
 
             <div class="form-group">
@@ -45,10 +44,10 @@
                 </ul>
             {% endif %}
 
+            <div class="form-group">
+                {{ form1.submit1(class="btn btn-outline-info") }}
+            </div>
         </fieldset>
-        <div class="form-group">
-            {{ form1.submit1(class="btn btn-outline-info") }}
-        </div>
     </form>
 
     <form method="POST">
@@ -57,7 +56,7 @@
             <legend class="border-bottom mb-4">report post</legend>
 
             <div class="form-group">
-                {{ form2.reported_post(class="form-control form-control-lg",value=id,readonly=true) }}
+                {{ form2.reported_post(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
             </div>
             {% if form2.reported_post.errors %}
                 <ul class="errors">
@@ -68,8 +67,11 @@
             {% endif %}
             
             <div class="form-group">
-                {{ form2.reason.label(class="form-control-label") }}
-                {{ form2.reason(class="form-control form-control-lg") }}
+                {% for subfield in form2.reason %}
+                    <div>
+                        {{ subfield() }} {{ subfield.label }}
+                    </div>
+                {% endfor %}
             </div>
             {% if form2.reason.errors %}
                 <ul class="errors">
@@ -79,10 +81,10 @@
                 </ul>
             {% endif %}
 
+            <div class="form-group">
+                {{ form2.submit2(class="btn btn-outline-info") }}
+            </div>
         </fieldset>
-        <div class="form-group">
-            {{ form2.submit2(class="btn btn-outline-info") }}
-        </div>
     </form>
     {% endif %}
 

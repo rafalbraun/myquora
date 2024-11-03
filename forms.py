@@ -24,6 +24,6 @@ class CreateCommentForm(FlaskForm):
 
 class ReportPostForm(FlaskForm):
     id = IntegerField('', validators=[])
-    reason = RadioField('Label', choices=[('v1','violence'),('v2','spam'),('v3','obscenity'),('v4','other')])
+    reason = RadioField('report reason', choices=[('v1','violence'),('v2','spam'),('v3','obscenity'),('v4','other')])
     reported_post = IntegerField('', validators=[DataRequired()])
     submit2 = SubmitField('confirm')
