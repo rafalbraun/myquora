@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
 from models import db, bcrypt, User, Post, Report, Notification
-from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm, ReportPostForm
+from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm, ReportPostForm, LoginForm
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 
@@ -49,15 +49,15 @@ def index():
 def login():
     if current_user.is_authenticated is True:
         return redirect(url_for("posts"))
-    if request.method == "POST":
-        user = User.query.filter_by(
-            username=request.form.get("username")).first()
-        if user and bcrypt.check_password_hash(user.password, request.form.get("password")):
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(username=form.username.data).first()
+        if user and bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
             return redirect(url_for("posts"))
         else:
             flash(f'Wrong credentials or no such user', 'error')
-    return render_template("login.html")
+    return render_template("login.html", form=form)
 
 @app.route("/logout")
 def logout():
@@ -163,7 +163,6 @@ def post_update(id):
     if form.validate_on_submit():
         form.populate_obj(post)
         db.session.add(post)
-        ## here update rid and pid
         db.session.commit()
         flash(f'Post has been updated.', 'success')
         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))

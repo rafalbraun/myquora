@@ -27,3 +27,8 @@ class ReportPostForm(FlaskForm):
     reason = RadioField('report reason', choices=[('v1','violence'),('v2','spam'),('v3','obscenity'),('v4','other')])
     reported_post = IntegerField('', validators=[DataRequired()])
     submit2 = SubmitField('confirm')
+
+class LoginForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=1, max=120)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=1, max=120)])
+    submit = SubmitField('login')
