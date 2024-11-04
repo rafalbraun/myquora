@@ -12,7 +12,10 @@
 
     <p>{% if post.deleted_by_id is none %}{{ post.content }}{% else %}[post deleted]{% endif %}</p>
 
+    {%if current_user.is_authenticated %}
     <button class="reply-btn" data-post-id="{{post.id}}" data-root-id="{{post.rid}}">reply</button>
+    <button class="report-btn" data-post-id="{{post.id}}">report</button>
+    {%endif%}
 
     {%if current_user.id == post.created_by_id and post.deleted_by_id is none %}
     <a href="/post_update/{{ post.id }}">update</a>

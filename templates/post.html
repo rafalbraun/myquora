@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block content %}
     <div class="content-section">
-
         {% with messages = get_flashed_messages() %}
             {% if messages %}
                 {% for message in messages %}
@@ -10,82 +9,78 @@
                 <hr>
             {% endif %}
         {% endwith %}
-
     	{% if post is not none %}
             {% with post=post %}
                 {% include "comments.html" %}
             {% endwith %}
     	{% endif %}
-
 	</div>
-<!--
+
     {%if current_user.is_authenticated %}
-    <form method="POST">
-        {{ form1.csrf_token }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">comment post</legend>
+    <div id="reply-form-template" style="display: none;">
+        <form method="POST">
+            {{ form1.csrf_token }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">comment post</legend>
 
-            <div class="form-group">
-                {{ form1.rid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
-            </div>
-            <div class="form-group">
-                {{ form1.pid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
-            </div>
+                <div class="form-group">
+                    {{ form1.rid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
+                </div>
+                <div class="form-group">
+                    {{ form1.pid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
+                </div>
 
-            <div class="form-group">
-                {{ form1.content.label(class="form-control-label") }}
-                {{ form1.content(class="form-control form-control-lg") }}
-            </div>
-            {% if form1.content.errors %}
-                <ul class="errors">
-                    {% for error in form1.content.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
+                <div class="form-group">
+                    {{ form1.content.label(class="form-control-label") }}
+                    {{ form1.content(class="form-control form-control-lg") }}
+                </div>
+                {% if form1.content.errors %}
+                    <ul class="errors">
+                        {% for error in form1.content.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
 
-            <div class="form-group">
-                {{ form1.submit1(class="btn btn-outline-info") }}
-            </div>
-        </fieldset>
-    </form>
-
-    <form method="POST">
-        {{ form2.csrf_token }}
-        <fieldset class="form-group">
-            <legend class="border-bottom mb-4">report post</legend>
-
-            <div class="form-group">
-                {{ form2.reported_post(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
-            </div>
-            {% if form2.reported_post.errors %}
-                <ul class="errors">
-                    {% for error in form2.reported_post.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-            
-            <div class="form-group">
-                {% for subfield in form2.reason %}
-                    <div>
-                        {{ subfield() }} {{ subfield.label }}
-                    </div>
-                {% endfor %}
-            </div>
-            {% if form2.reason.errors %}
-                <ul class="errors">
-                    {% for error in form2.reason.errors %}
-                        <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            <div class="form-group">
-                {{ form2.submit2(class="btn btn-outline-info") }}
-            </div>
-        </fieldset>
-    </form>
+                <div class="form-group">
+                    {{ form1.submit1(class="btn btn-outline-info") }}
+                </div>
+            </fieldset>
+        </form>
+    </div>
     {% endif %}
--->
+
+    {%if current_user.is_authenticated %}
+    <div id="report-form-template" style="display: none;">
+        <form method="POST">
+            {{ form2.csrf_token }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">report post</legend>
+
+                <div class="form-group">
+                    {{ form2.reported_post(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
+                </div>
+                
+                <div class="form-group">
+                    {% for subfield in form2.reason %}
+                        <div>
+                            {{ subfield() }} {{ subfield.label }}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% if form2.reason.errors %}
+                    <ul class="errors">
+                        {% for error in form2.reason.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <div class="form-group">
+                    {{ form2.submit2(class="btn btn-outline-info") }}
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    {% endif %}
 {% endblock %}

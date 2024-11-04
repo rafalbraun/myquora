@@ -117,7 +117,7 @@ def post(id):
         report.created_by_id = current_user.id
         db.session.add(report)
         db.session.commit()
-        flash(f'Post has been reported.', 'success')
+        flash(f'Post {report.reported_post} has been reported.', 'success')
         return redirect(url_for('post', id=root.id))
 
     return render_template('post.html', post=root, form1=form1, form2=form2, id=root.id)

@@ -29,77 +29,62 @@
 	<hr>
     {% block content %} 
     {% endblock %} 
-
-	{%if current_user.is_authenticated %}
-	<div id="reply-form-template" style="display: none;">
-	    <form method="POST">
-	        {{ form1.csrf_token }}
-	        <fieldset class="form-group">
-	            <legend class="border-bottom mb-4">comment post</legend>
-
-	            <div class="form-group">
-	                {{ form1.rid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
-	            </div>
-	            <div class="form-group">
-	                {{ form1.pid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
-	            </div>
-
-	            <div class="form-group">
-	                {{ form1.content.label(class="form-control-label") }}
-	                {{ form1.content(class="form-control form-control-lg") }}
-	            </div>
-	            {% if form1.content.errors %}
-	                <ul class="errors">
-	                    {% for error in form1.content.errors %}
-	                        <li>{{ error }}</li>
-	                    {% endfor %}
-	                </ul>
-	            {% endif %}
-
-	            <div class="form-group">
-	                {{ form1.submit1(class="btn btn-outline-info") }}
-	            </div>
-	        </fieldset>
-	    </form>
-	</div>
-    {% endif %}
-
 </main>
     <script>
 	document.addEventListener("DOMContentLoaded", function() {
-	    // Add event listeners to all reply buttons
+
 	    document.querySelectorAll('.reply-btn').forEach(function(button) {
 	        button.addEventListener('click', function() {
 	            
-	            // Remove any existing reply forms
 	            const existingForms = document.querySelectorAll('.reply-form');
 	            existingForms.forEach(function(form) {
 	                form.remove();
 	            });
 
-	            // Get the form template
 	            const formTemplate = document.getElementById('reply-form-template').innerHTML;
 	            
-	            // Create a new div to hold the form
 	            const replyFormDiv = document.createElement('div');
-	            replyFormDiv.classList.add('reply-form');  // Add class to identify reply forms
+	            replyFormDiv.classList.add('reply-form');
 	            replyFormDiv.innerHTML = formTemplate;
-	            
+
 	            const postId = this.getAttribute('data-post-id');
 	            const rootId = this.getAttribute('data-root-id');
-	            
+
 	            const pidInputField = replyFormDiv.querySelector('input[name="pid"]');
 	            pidInputField.value = postId;
 
 	            const ridInputField = replyFormDiv.querySelector('input[name="rid"]');
 	            ridInputField.value = rootId;
 	            
-	            // Find the specific post div by ID and append the form under it
 	            const postDiv = document.getElementById(postId);
 	            postDiv.appendChild(replyFormDiv);
-	            
 	        });
 	    });
+
+	    document.querySelectorAll('.report-btn').forEach(function(button) {
+	        button.addEventListener('click', function() {
+	            
+	            const existingForms = document.querySelectorAll('.report-form');
+	            existingForms.forEach(function(form) {
+	                form.remove();
+	            });
+
+	            const formTemplate = document.getElementById('report-form-template').innerHTML;
+	            
+	            const reportFormDiv = document.createElement('div');
+	            reportFormDiv.classList.add('report-form');
+	            reportFormDiv.innerHTML = formTemplate;
+
+	            const postId = this.getAttribute('data-post-id');
+
+	            const inputField = reportFormDiv.querySelector('input[name="reported_post"]');
+	            inputField.value = postId;
+
+	            const postDiv = document.getElementById(postId);
+	            postDiv.appendChild(reportFormDiv);
+	        });
+	    });
+
 	});
     </script>
 </body>
