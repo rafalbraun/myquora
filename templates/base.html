@@ -31,15 +31,24 @@
     {% endblock %} 
 </main>
     <script>
+
+    function removeAll() {
+		console.log("dupa3");
+        existingForms = document.querySelectorAll('.reply-form');
+        existingForms.forEach(function(form) {
+            form.remove();
+        });
+        existingForms = document.querySelectorAll('.report-form');
+        existingForms.forEach(function(form) {
+            form.remove();
+        });
+    }
+
 	document.addEventListener("DOMContentLoaded", function() {
 
 	    document.querySelectorAll('.reply-btn').forEach(function(button) {
 	        button.addEventListener('click', function() {
-	            
-	            const existingForms = document.querySelectorAll('.reply-form');
-	            existingForms.forEach(function(form) {
-	                form.remove();
-	            });
+	            removeAll();
 
 	            const formTemplate = document.getElementById('reply-form-template').innerHTML;
 	            
@@ -63,11 +72,7 @@
 
 	    document.querySelectorAll('.report-btn').forEach(function(button) {
 	        button.addEventListener('click', function() {
-	            
-	            const existingForms = document.querySelectorAll('.report-form');
-	            existingForms.forEach(function(form) {
-	                form.remove();
-	            });
+	            removeAll();
 
 	            const formTemplate = document.getElementById('report-form-template').innerHTML;
 	            
@@ -82,6 +87,14 @@
 
 	            const postDiv = document.getElementById(postId);
 	            postDiv.appendChild(reportFormDiv);
+	        });
+	    });
+
+	    document.querySelectorAll('.cancel-btn').forEach(function(button) {
+	    	console.log("dupa1");
+	        button.addEventListener('click', function() {
+		    	console.log("dupa2");
+	        	removeAll();
 	        });
 	    });
 
