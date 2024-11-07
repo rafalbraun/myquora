@@ -5,11 +5,11 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 from models import Post, User
 
 class CreatePostForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired()])
+    content = TextAreaField('Content', validators=[DataRequired(), Length(max=2000)])
     submit = SubmitField('create')
 
 class UpdatePostForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired()])
+    content = TextAreaField('Content', validators=[DataRequired(), Length(max=2000)])
     submit = SubmitField('update')
 
 class DeletePostForm(FlaskForm):
@@ -17,14 +17,14 @@ class DeletePostForm(FlaskForm):
     submit = SubmitField('confirm')
 
 class CreateCommentForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired()])
+    content = TextAreaField('Content', validators=[DataRequired(), Length(max=2000)])
     rid = IntegerField('', validators=[DataRequired()])
     pid = IntegerField('', validators=[DataRequired()])
     submit1 = SubmitField('create')
 
 class ReportPostForm(FlaskForm):
     id = IntegerField('', validators=[])
-    reason = RadioField('report reason', choices=[('v1','violence'),('v2','spam'),('v3','obscenity'),('v4','other')])
+    reason = RadioField('report reason', choices=[('v1','violence'),('v2','spam'),('v3','obscenity'),('v4','other')], validators=[DataRequired()])
     reported_post = IntegerField('', validators=[DataRequired()])
     submit2 = SubmitField('confirm')
 

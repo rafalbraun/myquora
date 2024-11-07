@@ -162,6 +162,8 @@ def post_update(id):
     form = UpdatePostForm(request.form, obj=post)
     if form.validate_on_submit():
         form.populate_obj(post)
+        post.updated_by_id = current_user.id
+        post.updated_at = datetime.utcnow()
         db.session.add(post)
         db.session.commit()
         flash(f'Post has been updated.', 'success')
@@ -180,6 +182,7 @@ def post_delete(id):
     if form.validate_on_submit():
         ##db.session.delete(post)
         post.deleted_by_id = current_user.id
+        post.deleted_at = datetime.utcnow()
         db.session.commit()
         flash(f'Post has been deleted.', 'success')
         return redirect(url_for('post', id=post.rid, _anchor=str(post.id)))

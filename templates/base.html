@@ -33,7 +33,6 @@
     <script>
 
     function removeAll() {
-		console.log("dupa3");
         existingForms = document.querySelectorAll('.reply-form');
         existingForms.forEach(function(form) {
             form.remove();
@@ -91,9 +90,7 @@
 	    });
 
 	    document.querySelectorAll('.cancel-btn').forEach(function(button) {
-	    	console.log("dupa1");
 	        button.addEventListener('click', function() {
-		    	console.log("dupa2");
 	        	removeAll();
 	        });
 	    });
