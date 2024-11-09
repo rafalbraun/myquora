@@ -8,32 +8,15 @@
 	            {% endfor %}
 	        {% endif %}
 	    {% endwith %}
-
-	    TOTAL {{pagination.total}}
-
-		<table>
-			<tr>
-				<th>content</th>
-				<th>author</th>
-			</tr>
-			{% for post in pagination %}
-			<tr>
-				<td>
-					<a href="/post/{{post.id}}">
-						{% if post.deleted_by_id is none %}
-							{{ post.display_content }}
-						{% else %}
-							[post deleted]
-						{% endif %}
-					</a>
-				</td>
-				<td>
-					<a href="/user/{{post.created_by.id}}">{{post.created_by.username}}</a>
-				</td>
-			</tr>
-			{% endfor %}
-		</table>
+		{% for post in pagination %}
+	    	{% if post is not none %}
+	            {% with post=post %}
+	                {% include "comments.html" %}
+	            {% endwith %}
+	    	{% endif %}
+		{% endfor %}
 	</div>
+	
 	<div class="pagination" style="font-size: 1.125rem; padding: .5rem .75rem; border: 1px solid #dddddd; margin-top: 1rem;">
 	{% for page in pagination.iter_pages() %}
 		{% if page %}

@@ -4,9 +4,8 @@
         <div class="left">
             <span>
                 <a href="/user/{{post.created_by_id}}">{{post.created_by.username}}</a> 
-
-                posted {{ post.created_at|humanize_date }}
-
+                posted 
+                <a href="/post/{{post.id}}">{{ post.created_at|humanize_date }}</a>
             </span>
             {% if post.updated_by_id is not none and post.deleted_by_id is none %}
                 <span>[edited]</span>
@@ -16,10 +15,12 @@
 
             <label for="upvote-{{post.id}}">{{post.upvotes|length}}</label>
 
-            {% if post.upvotes | selectattr("id", "equalto", current_user.id) | list | length > 0 %}
-                <input id="upvote-{{post.id}}" type="button" value="+" data-post-id="{{post.id}}" onclick="handleUpvote(this)" class="upvoted">
-            {% else %}
-                <input id="upvote-{{post.id}}" type="button" value="+" data-post-id="{{post.id}}" onclick="handleUpvote(this)">
+            {% if post.created_by_id != current_user.id %}
+                {% if post.upvotes | selectattr("id", "equalto", current_user.id) | list | length > 0 %}
+                    <input id="upvote-{{post.id}}" type="button" value="+" data-post-id="{{post.id}}" onclick="handleUpvote(this)" class="upvoted">
+                {% else %}
+                    <input id="upvote-{{post.id}}" type="button" value="+" data-post-id="{{post.id}}" onclick="handleUpvote(this)">
+                {% endif %}
             {% endif %}
 
         </div>
@@ -30,7 +31,7 @@
     {%endif%}
 
     {%for vote in post.upvotes %}
-    {{vote.username}}
+    <a href="/user/{{vote.id}}">{{vote.username}}</a>
     {%endfor%}
 
     {% if post.deleted_by_id is none %}
@@ -44,21 +45,27 @@
         <p>[post deleted]</p>
     {% endif %}
 
-    {%if current_user.is_authenticated%}
-        {%if post.deleted_by_id is none%}
-        <button class="reply-btn" data-post-id="{{post.id}}" data-root-id="{{post.rid}}">reply</button>
-        <button class="report-btn" data-post-id="{{post.id}}">report</button>
-        {%else%}
-        <button disabled>reply</button>
-        <button disabled>report</button>
-        {%endif%}
-    {%endif%}
-
-    {%if current_user.id == post.created_by_id and post.deleted_by_id is none %}
-    <a href="/post_update/{{ post.id }}">update</a>
-    <a href="/post_delete/{{ post.id }}">delete</a>
-    {%endif%}
-
-    <hr>
-
+    <div class="container" style="display: flex; justify-content: space-between">
+        <div class="left">
+            {%if current_user.is_authenticated%}
+                {%if post.deleted_by_id is none%}
+                <button class="reply-btn" data-post-id="{{post.id}}" data-root-id="{{post.rid}}">reply</button>
+                <button class="report-btn" data-post-id="{{post.id}}">report</button>
+                {%else%}
+                <button disabled>reply</button>
+                <button disabled>report</button>
+                {%endif%}
+            {%endif%}            
+            {%if current_user.id == post.created_by_id and post.deleted_by_id is none %}
+            <a href="/post_update/{{ post.id }}">update</a>
+            <a href="/post_delete/{{ post.id }}">delete</a>
+            {%endif%}
+        </div>
+        <div class="right">
+            {%if post.id == post.rid == post.pid%}
+            <a href="/post/{{post.id}}">{{post.comments}} comments</a>
+            {%endif%}
+        </div>
+    </div>
 </div>
+<hr>

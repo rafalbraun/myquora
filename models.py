@@ -55,7 +55,7 @@ class Post(db.Model):
     updated_by = db.relationship("User", foreign_keys=[updated_by_id])
     deleted_by = db.relationship("User", foreign_keys=[deleted_by_id])
     level = db.Column(db.Integer, nullable=False,  default=0)
-    comments = db.Column(db.Integer, nullable=False,  default=0)
+    comments = db.Column(db.Integer, nullable=False,  default=0) ## number of comments
     upvotes = db.relationship("User", secondary=Upvote.__table__)
     children = []
     def __repr__(self):

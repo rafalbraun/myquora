@@ -248,7 +248,7 @@ def post_upvote():
 
 @app.route('/images/<filename>')
 def serve_image(filename):
-    ## TODO add checking if file not deleted
+    ## TODO add checking if post not deleted for violation
     try:
         return send_from_directory(IMAGE_FOLDER, filename)
     except FileNotFoundError:

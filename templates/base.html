@@ -108,9 +108,17 @@
 	        // Parse the UTC date string into a JavaScript Date object as UTC
 	        const dateObj = new Date(utcDateStr + "Z"); // 'Z' denotes UTC time
 	        
-	        // Convert UTC date to user's local timezone and format it
-	        const localDateStr = dateObj.toLocaleString(); // Converts to user's local timezone
-	        
+		    // Convert UTC date to user's local timezone and format it in 24-hour format
+		    const localDateStr = dateObj.toLocaleString(undefined, {
+		        year: 'numeric',
+		        month: '2-digit',
+		        day: '2-digit',
+		        hour: '2-digit',
+		        minute: '2-digit',
+		        second: '2-digit',
+		        hour12: false // Forces 24-hour format
+		    });
+		    
 	        // Replace the inner text with the human-readable, adjusted local time
 	        const humanizedText = humanizeDate(dateObj);
 	        
