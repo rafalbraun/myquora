@@ -5,11 +5,11 @@ from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationE
 from models import Post, User
 
 class CreatePostForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired(), Length(max=2000)])
+    content = TextAreaField('Content', validators=[DataRequired(), Length(max=5000)])
     submit = SubmitField('create')
 
 class UpdatePostForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired(), Length(max=2000)])
+    content = TextAreaField('Content', validators=[DataRequired(), Length(max=10000)])
     submit = SubmitField('update')
 
 class DeletePostForm(FlaskForm):
@@ -17,7 +17,7 @@ class DeletePostForm(FlaskForm):
     submit = SubmitField('confirm')
 
 class CreateCommentForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired(), Length(max=2000)])
+    content = TextAreaField('Content', validators=[DataRequired(), Length(max=10000)])
     rid = IntegerField('', validators=[DataRequired()])
     pid = IntegerField('', validators=[DataRequired()])
     submit1 = SubmitField('create')

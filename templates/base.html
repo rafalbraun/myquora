@@ -32,6 +32,60 @@
 </main>
     <script>
 
+	function humanizeDate(date) {
+	    const now = new Date();
+	    const diff = now - date;
+	    const seconds = Math.floor(diff / 1000);
+	    const minutes = Math.floor(seconds / 60);
+	    const hours = Math.floor(minutes / 60);
+	    const days = Math.floor(hours / 24);
+
+	    if (seconds < 60) return 'just now';
+	    if (seconds < 120) return 'a minute ago';
+	    if (minutes < 60) return `${minutes} minutes ago`;
+	    if (minutes < 120) return 'an hour ago';
+	    if (hours < 24) return `${hours} hours ago`;
+	    if (hours < 48) return 'yesterday';
+	    if (days < 7) return `${days} days ago`;
+	    if (days < 14) return 'last week';
+	    if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+	    if (days < 365) return `${Math.floor(days / 30)} months ago`;
+	    return `${Math.floor(days / 365)} years ago`;
+	}
+
+	async function handleUpvote(button) {
+	    const postId = button.getAttribute('data-post-id');
+		const label = document.querySelector(`label[for="upvote-${postId}"]`);
+
+	    try {
+	        const response = await fetch('/upvote', {
+	            method: 'POST',
+	            headers: {
+	                'Content-Type': 'application/json'
+	            },
+	            body: JSON.stringify({ postId: postId })
+	        });
+
+	        if (!response.ok) {
+	            throw new Error('Failed to toggle upvote');
+	        }
+
+	        const data = await response.json();
+
+	        label.textContent = data.upvote_count;
+
+	        // Toggle the upvoted class based on the action
+	        if (data.action === "added") {
+	            button.classList.add("upvoted");
+	        } else {
+	            button.classList.remove("upvoted");
+	        }
+	    } catch (error) {
+	        console.error('Error:', error);
+	        button.value = 'Error';
+	    }
+	}
+
     function removeAll() {
         existingForms = document.querySelectorAll('.reply-form');
         existingForms.forEach(function(form) {
@@ -44,6 +98,26 @@
     }
 
 	document.addEventListener("DOMContentLoaded", function() {
+
+	    const datetimeElements = document.querySelectorAll('.datetime');
+	    
+	    datetimeElements.forEach(element => {
+	        // Get the original UTC date from the tooltip in 'title' attribute
+	        const utcDateStr = element.getAttribute('title');
+	        
+	        // Parse the UTC date string into a JavaScript Date object as UTC
+	        const dateObj = new Date(utcDateStr + "Z"); // 'Z' denotes UTC time
+	        
+	        // Convert UTC date to user's local timezone and format it
+	        const localDateStr = dateObj.toLocaleString(); // Converts to user's local timezone
+	        
+	        // Replace the inner text with the human-readable, adjusted local time
+	        const humanizedText = humanizeDate(dateObj);
+	        
+	        // Update the element with human-readable text, keep original date in tooltip
+	        element.textContent = humanizedText;
+	        element.setAttribute('title', localDateStr); // Tooltip with local date
+	    });
 
 	    document.querySelectorAll('.reply-btn').forEach(function(button) {
 	        button.addEventListener('click', function() {

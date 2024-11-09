@@ -18,6 +18,13 @@ class Notification(db.Model):
     user = db.relationship("User", foreign_keys=[uid], viewonly=True)
     __table_args__ = (PrimaryKeyConstraint(uid, pid), {})
 
+class Upvote(db.Model):
+    uid = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    pid = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
+    post = db.relationship("Post", foreign_keys=[pid], viewonly=True)
+    user = db.relationship("User", foreign_keys=[uid], viewonly=True)
+    __table_args__ = (PrimaryKeyConstraint(uid, pid), {})
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), unique=True, nullable=False)
@@ -41,6 +48,7 @@ class Post(db.Model):
     deleted_by = db.relationship("User", foreign_keys=[deleted_by_id])
     level = db.Column(db.Integer, nullable=False,  default=0)
     comments = db.Column(db.Integer, nullable=False,  default=0)
+    upvotes = db.relationship("User", secondary=Upvote.__table__)
     children = []
     def __repr__(self):
         return f'<Post id={self.id} pid={self.pid} rid={self.rid}>'

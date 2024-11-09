@@ -3,15 +3,35 @@
     <div class="container" style="display: flex; justify-content: space-between">
         <div class="left">
             <span>
-                <a href="/user/{{post.created_by_id}}">{{post.created_by.username}}</a> posted on {{post.created_at}}
+                <a href="/user/{{post.created_by_id}}">{{post.created_by.username}}</a> 
+
+                posted {{ post.created_at|humanize_date }}
+
             </span>
             {% if post.updated_by_id is not none and post.deleted_by_id is none %}
                 <span>[edited]</span>
             {% endif %}
         </div>
         <div class="right">
+
+            <label for="upvote-{{post.id}}">{{post.upvotes|length}}</label>
+
+            {% if post.upvotes | selectattr("id", "equalto", current_user.id) | list | length > 0 %}
+                <input id="upvote-{{post.id}}" type="button" value="+" data-post-id="{{post.id}}" onclick="handleUpvote(this)" class="upvoted">
+            {% else %}
+                <input id="upvote-{{post.id}}" type="button" value="+" data-post-id="{{post.id}}" onclick="handleUpvote(this)">
+            {% endif %}
+
         </div>
     </div>
+
+    {%if post.upvotes|length > 0%}
+    upvoted by 
+    {%endif%}
+
+    {%for vote in post.upvotes %}
+    {{vote.username}}
+    {%endfor%}
 
     <p>{% if post.deleted_by_id is none %}{{ post.content }}{% else %}[post deleted]{% endif %}</p>
 

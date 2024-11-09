@@ -1,11 +1,11 @@
-from flask import Flask, render_template, url_for, flash, redirect, request, make_response, jsonify, abort
+from flask import Flask, Markup, render_template, url_for, flash, redirect, request, make_response, jsonify, abort
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from flask_mail import Mail, Message
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from config import Config
-from models import db, bcrypt, User, Post, Report, Notification
+from models import db, bcrypt, User, Post, Report, Notification, Upvote
 from forms import CreatePostForm, UpdatePostForm, DeletePostForm, CreateCommentForm, ReportPostForm, LoginForm
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
@@ -31,10 +31,10 @@ with app.app_context():
     db.create_all()
     db.session.add(User(id=1,username="test1", email="test1@gmail.com", password=bcrypt.generate_password_hash("test1").decode('utf-8')))
     db.session.add(User(id=2,username="admin", email="admin@gmail.com", password=bcrypt.generate_password_hash("admin").decode('utf-8')))
-    db.session.add(Post(id=1,rid=1,pid=1,level=0,created_by_id=1,content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et mollis eros, nec commodo metus. Ut ligula orci, elementum sodales neque eget, imperdiet dapibus justo. Nunc consectetur, elit sit amet tempus feugiat, lectus odio rutrum metus, in convallis felis lacus non ipsum. Ut in arcu eu libero fermentum bibendum lobortis vehicula lectus. Vivamus quis ultricies elit. In venenatis ligula enim, vitae interdum leo bibendum nec. Praesent convallis ornare ex, ut tristique quam porta vitae. Sed euismod justo in quam varius rhoncus. Maecenas id sem nec urna mollis aliquet.", comments=3))
-    db.session.add(Post(id=2,rid=1,pid=1,level=1,created_by_id=2,content="Suspendisse sapien odio, efficitur id rhoncus a, porttitor ut ante. Sed laoreet libero at nulla dictum, ac ultrices nunc commodo. Sed odio libero, accumsan sit amet nunc eu, feugiat dictum neque. Donec iaculis neque imperdiet nulla auctor tristique. Nullam quis lectus imperdiet, cursus elit ac, ultrices arcu. In condimentum elit et ligula euismod dignissim. Vivamus sed dapibus urna."))
-    db.session.add(Post(id=3,rid=1,pid=1,level=1,created_by_id=2,content="Ut id aliquet nibh. In sit amet finibus massa. Aenean imperdiet nisi ut est sagittis vulputate. Duis vestibulum ligula in gravida mattis. Integer gravida tempus vestibulum. Vestibulum placerat pulvinar mi, id dictum quam accumsan id. Suspendisse nec blandit magna. Vivamus ullamcorper, neque mollis rutrum semper, quam justo porta erat, sit amet fermentum libero erat eleifend lorem. Mauris luctus nisl et tortor bibendum, id facilisis arcu auctor. Etiam id euismod massa, et varius ipsum. Nullam sagittis velit at libero feugiat consequat. Donec luctus sapien eu felis pellentesque elementum. Fusce et dolor sed libero tincidunt hendrerit. Donec egestas faucibus justo non consectetur."))
-    db.session.add(Post(id=4,rid=1,pid=2,level=2,created_by_id=2,content="Integer sagittis dapibus interdum. Donec est ipsum, volutpat a lacinia eu, dictum vitae dui. Morbi massa sapien, sodales quis ex vel, hendrerit commodo sapien. Curabitur finibus enim vitae quam varius sagittis. Sed sagittis convallis tellus quis semper. Aenean elit nulla, mollis quis tempus in, rhoncus suscipit libero. Morbi nec eros bibendum, vulputate risus eget, accumsan purus. In finibus feugiat est ut sagittis. Fusce quis vehicula odio, vel maximus risus. Nam quis convallis arcu, suscipit lobortis risus. In sit amet commodo risus, vitae mattis turpis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Aliquam molestie augue magna, sit amet rhoncus lectus venenatis id. Vestibulum eget tristique ex."))
+    db.session.add(Post(id=1,rid=1,pid=1,level=0,created_by_id=1,created_at=datetime(2024, 11, 9, 10, 56, 20),content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et mollis eros, nec commodo metus. Ut ligula orci, elementum sodales neque eget, imperdiet dapibus justo. Nunc consectetur, elit sit amet tempus feugiat, lectus odio rutrum metus, in convallis felis lacus non ipsum. Ut in arcu eu libero fermentum bibendum lobortis vehicula lectus. Vivamus quis ultricies elit. In venenatis ligula enim, vitae interdum leo bibendum nec. Praesent convallis ornare ex, ut tristique quam porta vitae. Sed euismod justo in quam varius rhoncus. Maecenas id sem nec urna mollis aliquet.", comments=3))
+    db.session.add(Post(id=2,rid=1,pid=1,level=1,created_by_id=2,created_at=datetime(2024, 11, 9, 10, 56, 20),content="Suspendisse sapien odio, efficitur id rhoncus a, porttitor ut ante. Sed laoreet libero at nulla dictum, ac ultrices nunc commodo. Sed odio libero, accumsan sit amet nunc eu, feugiat dictum neque. Donec iaculis neque imperdiet nulla auctor tristique. Nullam quis lectus imperdiet, cursus elit ac, ultrices arcu. In condimentum elit et ligula euismod dignissim. Vivamus sed dapibus urna."))
+    db.session.add(Post(id=3,rid=1,pid=1,level=1,created_by_id=2,created_at=datetime(2020, 5, 17, 10, 56, 20),content="Ut id aliquet nibh. In sit amet finibus massa. Aenean imperdiet nisi ut est sagittis vulputate. Duis vestibulum ligula in gravida mattis. Integer gravida tempus vestibulum. Vestibulum placerat pulvinar mi, id dictum quam accumsan id. Suspendisse nec blandit magna. Vivamus ullamcorper, neque mollis rutrum semper, quam justo porta erat, sit amet fermentum libero erat eleifend lorem. Mauris luctus nisl et tortor bibendum, id facilisis arcu auctor. Etiam id euismod massa, et varius ipsum. Nullam sagittis velit at libero feugiat consequat. Donec luctus sapien eu felis pellentesque elementum. Fusce et dolor sed libero tincidunt hendrerit. Donec egestas faucibus justo non consectetur."))
+    db.session.add(Post(id=4,rid=1,pid=2,level=2,created_by_id=2,created_at=datetime(2024, 11, 8, 10, 56, 20),content="Integer sagittis dapibus interdum. Donec est ipsum, volutpat a lacinia eu, dictum vitae dui. Morbi massa sapien, sodales quis ex vel, hendrerit commodo sapien. Curabitur finibus enim vitae quam varius sagittis. Sed sagittis convallis tellus quis semper. Aenean elit nulla, mollis quis tempus in, rhoncus suscipit libero. Morbi nec eros bibendum, vulputate risus eget, accumsan purus. In finibus feugiat est ut sagittis. Fusce quis vehicula odio, vel maximus risus. Nam quis convallis arcu, suscipit lobortis risus. In sit amet commodo risus, vitae mattis turpis. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Aliquam molestie augue magna, sit amet rhoncus lectus venenatis id. Vestibulum eget tristique ex."))
     db.session.commit()
 
 @login_manager.user_loader
@@ -122,6 +122,32 @@ def post(id):
 
     return render_template('post.html', post=root, form1=form1, form2=form2, id=root.id)
 
+@app.route('/upvote', methods=['POST'])
+def post_upvote():
+    data = request.json
+    post_id = data.get('postId')
+    user_id = current_user.id  # Assuming current_user is set up with Flask-Login
+
+    # Check if the upvote already exists
+    existing_upvote = Upvote.query.filter_by(uid=user_id, pid=post_id).first()
+
+    if existing_upvote:
+        # If the upvote exists, delete it (cancel upvote)
+        db.session.delete(existing_upvote)
+        action = "removed"
+    else:
+        # If it doesn't exist, add a new upvote
+        new_upvote = Upvote(uid=user_id, pid=post_id)
+        db.session.add(new_upvote)
+        action = "added"
+
+    db.session.commit()
+
+    # Get the updated count of upvotes for the post
+    upvote_count = Upvote.query.filter_by(pid=post_id).count()
+
+    return jsonify(upvote_count=upvote_count, action=action)
+
 @app.route("/user/<int:id>")
 def user(id):
     page = db.paginate(db.select(Post).filter(
@@ -196,6 +222,13 @@ def notifications():
 @app.errorhandler(404) 
 def not_found(e): 
     return render_template("404.html") 
+
+@app.template_filter('humanize_date')
+def _jinja2_filter_datetime(date):
+    now = datetime.now()
+    diff = now - date
+    tooltip_date = date.strftime('%Y-%m-%d %H:%M:%S')
+    return Markup(f'<span class="datetime" title="{tooltip_date}">{tooltip_date}</span>')
 
 if __name__=="__main__":
     app.run(debug=True, host='0.0.0.0', port=8080)

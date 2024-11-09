@@ -30,3 +30,8 @@ textarea {
     width: 100%;
     resize: vertical;
 }
+
+.upvoted {
+    background: green;
+    color: white;
+}
