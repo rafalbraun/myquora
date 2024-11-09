@@ -1,4 +1,4 @@
-from flask import Flask, Markup, render_template, url_for, flash, redirect, request, make_response, jsonify, abort
+from flask import Flask, Markup, send_from_directory, render_template, url_for, flash, redirect, request, make_response, jsonify, abort
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, UserMixin, login_user, current_user, logout_user, login_required
 from flask_mail import Mail, Message
@@ -13,6 +13,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from collections import defaultdict
 from myutils import build_post_hierarchy, truncate_text_by_word
+import os
 
 page_size = 20
 
@@ -20,6 +21,14 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit to 16 MB
+app.config['SECRET_KEY'] = 'your_secret_key'
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif'}
+
+IMAGE_FOLDER = os.path.join(app.root_path, 'uploads')
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db.init_app(app)
 bcrypt.init_app(app)
@@ -94,6 +103,13 @@ def post(id):
         parent = Post.query.filter_by(id=form1.pid.data).first()
         post.level = parent.level+1
         root.comments = root.comments+1
+
+        image_file = request.files.get('image_file')
+        if image_file:
+            filename = secure_filename(image_file.filename)
+            image_file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            post.image = filename
+
         db.session.add(post)
         db.session.flush()
         db.session.refresh(post)
@@ -121,32 +137,6 @@ def post(id):
         return redirect(url_for('post', id=root.id))
 
     return render_template('post.html', post=root, form1=form1, form2=form2, id=root.id)
-
-@app.route('/upvote', methods=['POST'])
-def post_upvote():
-    data = request.json
-    post_id = data.get('postId')
-    user_id = current_user.id  # Assuming current_user is set up with Flask-Login
-
-    # Check if the upvote already exists
-    existing_upvote = Upvote.query.filter_by(uid=user_id, pid=post_id).first()
-
-    if existing_upvote:
-        # If the upvote exists, delete it (cancel upvote)
-        db.session.delete(existing_upvote)
-        action = "removed"
-    else:
-        # If it doesn't exist, add a new upvote
-        new_upvote = Upvote(uid=user_id, pid=post_id)
-        db.session.add(new_upvote)
-        action = "added"
-
-    db.session.commit()
-
-    # Get the updated count of upvotes for the post
-    upvote_count = Upvote.query.filter_by(pid=post_id).count()
-
-    return jsonify(upvote_count=upvote_count, action=action)
 
 @app.route("/user/<int:id>")
 def user(id):
@@ -229,6 +219,41 @@ def _jinja2_filter_datetime(date):
     diff = now - date
     tooltip_date = date.strftime('%Y-%m-%d %H:%M:%S')
     return Markup(f'<span class="datetime" title="{tooltip_date}">{tooltip_date}</span>')
+
+@app.route('/upvote', methods=['POST'])
+def post_upvote():
+    data = request.json
+    post_id = data.get('postId')
+    user_id = current_user.id
+
+    # Check if the upvote already exists
+    existing_upvote = Upvote.query.filter_by(uid=user_id, pid=post_id).first()
+
+    if existing_upvote:
+        # If the upvote exists, delete it (cancel upvote)
+        db.session.delete(existing_upvote)
+        action = "removed"
+    else:
+        # If it doesn't exist, add a new upvote
+        new_upvote = Upvote(uid=user_id, pid=post_id)
+        db.session.add(new_upvote)
+        action = "added"
+
+    db.session.commit()
+
+    # Get the updated count of upvotes for the post
+    upvote_count = Upvote.query.filter_by(pid=post_id).count()
+
+    return jsonify(upvote_count=upvote_count, action=action)
+
+@app.route('/images/<filename>')
+def serve_image(filename):
+    ## TODO add checking if file not deleted
+    try:
+        return send_from_directory(IMAGE_FOLDER, filename)
+    except FileNotFoundError:
+        ## TODO add empty image placeholder
+        return "Image not found", 404
 
 if __name__=="__main__":
     app.run(debug=True, host='0.0.0.0', port=8080)

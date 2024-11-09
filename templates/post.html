@@ -18,7 +18,7 @@
 
     {%if current_user.is_authenticated %}
     <div id="reply-form-template" style="display: none;">
-        <form method="POST">
+        <form method="POST" enctype="multipart/form-data">
             {{ form1.csrf_token }}
             <fieldset class="form-group">
                 <legend class="border-bottom mb-4">comment post</legend>
@@ -30,8 +30,11 @@
                     {{ form1.pid(class="form-control form-control-lg",value=id,readonly=true,hidden=true) }}
                 </div>
 
+                <button type="button">upload from link</button>
+                <button type="button">upload from file</button>
+                <br>
+
                 <div class="form-group">
-                    {{ form1.content.label(class="form-control-label") }}
                     {{ form1.content(class="form-control form-control-lg") }}
                 </div>
                 {% if form1.content.errors %}
@@ -41,6 +44,25 @@
                         {% endfor %}
                     </ul>
                 {% endif %}
+
+                <fieldset class="form-group">
+                    <legend class="border-bottom mb-4">load file</legend>
+                        <div>
+                            {{ form1.image_file.label }}
+                            {{ form1.image_file }}
+                        </div>
+                </fieldset>
+
+                <fieldset class="form-group">
+                    <legend class="border-bottom mb-4">load resource</legend>
+                        <div>
+                            {{ form1.link }}
+                        </div>
+                        <br>
+                        <button type="button" onclick="">upload</button>
+                        <button type="button" onclick="">cancel</button>
+                </fieldset>
+                <br>
 
                 <span class="form-group">
                     {{ form1.submit1(class="btn btn-outline-info") }}

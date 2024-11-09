@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, DateField, SelectField, FieldList, FormField, IntegerField, RadioField
-from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Optional
+from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Optional, URL
 from models import Post, User
 
 class CreatePostForm(FlaskForm):
@@ -17,9 +17,11 @@ class DeletePostForm(FlaskForm):
     submit = SubmitField('confirm')
 
 class CreateCommentForm(FlaskForm):
-    content = TextAreaField('Content', validators=[DataRequired(), Length(max=10000)])
+    content = TextAreaField('Content', validators=[Optional(), Length(max=10000)])
     rid = IntegerField('', validators=[DataRequired()])
     pid = IntegerField('', validators=[DataRequired()])
+    link = StringField('URL', validators=[URL(), Optional()])
+    image_file = FileField('Upload File', validators=[Optional()])
     submit1 = SubmitField('create')
 
 class ReportPostForm(FlaskForm):

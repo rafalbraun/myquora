@@ -33,7 +33,16 @@
     {{vote.username}}
     {%endfor%}
 
-    <p>{% if post.deleted_by_id is none %}{{ post.content }}{% else %}[post deleted]{% endif %}</p>
+    {% if post.deleted_by_id is none %}
+        <p>{{ post.content }}</p>
+        {%if post.image is not none%}
+        <div class="image">
+            <img src="/images/{{post.image}}"/>
+        </div>
+        {%endif%}
+    {% else %}
+        <p>[post deleted]</p>
+    {% endif %}
 
     {%if current_user.is_authenticated%}
         {%if post.deleted_by_id is none%}

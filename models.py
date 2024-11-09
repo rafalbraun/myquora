@@ -32,11 +32,19 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(120), unique=True, nullable=False)
     notifications = db.relationship("Post", secondary=Notification.__table__)
 
+class ImageFile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(30), unique=True, nullable=False)
+
+class VideoLink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rid = db.Column(db.Integer, nullable=True)
     pid = db.Column(db.Integer, db.ForeignKey('post.id'))
     content = db.Column(db.UnicodeText, nullable=True, default='')
+    image = db.Column(db.String(120), unique=True, nullable=True)
     created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     updated_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     deleted_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)

@@ -35,3 +35,20 @@ textarea {
     background: green;
     color: white;
 }
+
+#link {
+    width: 100%;
+}
+
+.image {
+    width: 100%; /* or set a fixed width like 300px */
+    height: auto; /* or a fixed height */
+    overflow: hidden; /* hides any overflow if image is larger than the container */
+    position: relative;
+}
+
+img {
+    width: 100%; /* makes the image fill the width of the parent div */
+    height: auto; /* keeps the aspect ratio intact */
+    display: block; /* removes any spacing below the image */
+}
